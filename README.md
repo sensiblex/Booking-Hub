@@ -8,7 +8,6 @@
 - Backend: Python (Django/Flask), REST API
 - Frontend: HTML5, CSS3, JavaScript
 - БД: PostgreSQL / MySQL
-- Взаимодействие: HTTP/HTTPS + JSON
 
 ## Роли пользователей
 
