@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная - Бронирование помещений</title>
+    <!-- Подключение Font Awesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Подключение внешнего CSS файла -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Шапка (Header) -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>Room<span>Booking</span></h1>
+                </div>
+                <nav class="nav-menu">
+                    <a href="index.html" class="active">Главная</a>
+                    <a href="#">Помещения</a>
+                    <a href="#">Бронирования</a>
+                    <a href="#">Отчеты</a>
+                    <a href="#">Контакты</a>
+                </nav>
+                <div class="auth-buttons">
+                    <a href="register.html">
+                        <button class="btn btn-outline">Регистрация</button>
+                    </a>
+                    <a href="login.html">
+                        <button class="btn btn-primary">Войти</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Главный контент -->
+    <main>
+        <!-- Hero секция с поиском -->
+        <section class="hero">
+            <div class="container">
+                <h2>Найдите идеальное помещение для вашего мероприятия</h2>
+                <p>Конференц-залы, переговорные, банкетные залы и многое другое</p>
+                
+                <div class="search-box">
+                    <input type="text" placeholder="Поиск помещений по названию или адресу...">
+                    <button><i class="fas fa-search"></i> Найти</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция с преимуществами -->
+        <section class="features">
+            <div class="container">
+                <h2 class="section-title">Почему выбирают нас</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <h3>Большой выбор</h3>
+                        <p>Более 500 помещений различного типа и вместимости</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h3>Мгновенное бронирование</h3>
+                        <p>Бронируйте помещения в реальном времени 24/7</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Безопасные платежи</h3>
+                        <p>Защищенные онлайн-транзакции и гарантия возврата</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>Гибкие тарифы</h3>
+                        <p>Разные ценовые категории и дополнительные услуги</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция с популярными помещениями -->
+        <section class="popular-rooms">
+            <div class="container">
+                <h2 class="section-title">Популярные помещения</h2>
+                <div class="rooms-grid">
+                    <div class="room-card">
+                        <div class="room-image">
+                            <img src="https://images.unsplash.com/photo-1517502884422-41eaead166d4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Конференц-зал">
+                        </div>
+                        <div class="room-info">
+                            <h3>Конференц-зал "Бизнес"</h3>
+                            <p class="room-location"><i class="fas fa-map-marker-alt"></i> Москва, центр</p>
+                            <div class="room-details">
+                                <span><i class="fas fa-users"></i> до 50 чел</span>
+                                <span><i class="fas fa-tv"></i> Проектор</span>
+                            </div>
+                            <div class="room-footer">
+                                <span class="room-price">от 3000 ₽/час</span>
+                                <button class="btn btn-primary btn-small">Забронировать</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="room-card">
+                        <div class="room-image">
+                            <img src="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Переговорная">
+                        </div>
+                        <div class="room-info">
+                            <h3>Переговорная "Стартап"</h3>
+                            <p class="room-location"><i class="fas fa-map-marker-alt"></i> Москва, Деловой центр</p>
+                            <div class="room-details">
+                                <span><i class="fas fa-users"></i> до 10 чел</span>
+                                <span><i class="fas fa-wifi"></i> Wi-Fi</span>
+                            </div>
+                            <div class="room-footer">
+                                <span class="room-price">от 1500 ₽/час</span>
+                                <button class="btn btn-primary btn-small">Забронировать</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="room-card">
+                        <div class="room-image">
+                            <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Банкетный зал">
+                        </div>
+                        <div class="room-info">
+                            <h3>Банкетный зал "Праздник"</h3>
+                            <p class="room-location"><i class="fas fa-map-marker-alt"></i> Москва, ЮЗАО</p>
+                            <div class="room-details">
+                                <span><i class="fas fa-users"></i> до 100 чел</span>
+                                <span><i class="fas fa-music"></i> Акустика</span>
+                            </div>
+                            <div class="room-footer">
+                                <span class="room-price">от 5000 ₽/час</span>
+                                <button class="btn btn-primary btn-small">Забронировать</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция с отзывами -->
+        <section class="testimonials">
+            <div class="container">
+                <h2 class="section-title">Что говорят наши клиенты</h2>
+                <div class="testimonials-grid">
+                    <div class="testimonial-card">
+                        <div class="testimonial-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p>"Отличный сервис! Быстро нашли помещение для конференции. Все прошло отлично."</p>
+                        <div class="testimonial-author">
+                            <strong>Алексей Иванов</strong>
+                            <span>Менеджер, ООО "ТехноПром"</span>
+                        </div>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p>"Удобная система бронирования. Всегда есть свободные помещения нужного формата."</p>
+                        <div class="testimonial-author">
+                            <strong>Елена Петрова</strong>
+                            <span>Организатор мероприятий</span>
+                        </div>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p>"Прозрачные цены и удобная оплата. Рекомендую!"</p>
+                        <div class="testimonial-author">
+                            <strong>Дмитрий Соколов</strong>
+                            <span>Предприниматель</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Подвал -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>RoomBooking</h4>
+                    <p>Сервис бронирования помещений для любых мероприятий с 2020 года</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Навигация</h4>
+                    <ul>
+                        <li><a href="#">О нас</a></li>
+                        <li><a href="#">Как это работает</a></li>
+                        <li><a href="#">Часто задаваемые вопросы</a></li>
+                        <li><a href="#">Контакты</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Поддержка</h4>
+                    <ul>
+                        <li><a href="#">Помощь</a></li>
+                        <li><a href="#">Политика конфиденциальности</a></li>
+                        <li><a href="#">Условия использования</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Контакты</h4>
+                    <p><i class="fas fa-phone"></i> +7 (495) 123-45-67</p>
+                    <p><i class="fas fa-envelope"></i> info@roombooking.ru</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 RoomBooking. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
