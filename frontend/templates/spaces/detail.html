@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ space.name }} — Booking-Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <h1>{{ space.name }}</h1>
+            <p class="lead text-muted">{{ space.address }}</p>
+            
+            {% if space.image %}
+                <img src="{{ space.image.url }}" class="img-fluid rounded-3 mb-4" alt="{{ space.name }}">
+            {% endif %}
+            
+            <h4>Описание</h4>
+            <p>{{ space.description|default:"Описание скоро появится" }}</p>
+            
+            <h5>Характеристики</h5>
+            <ul>
+                <li>Вместимость: {{ space.capacity }} человек</li>
+                <li>Цена за час: {{ space.price_per_hour }} ₽</li>
+                {% if space.has_projector %}<li>Есть проектор</li>{% endif %}
+                {% if space.has_board %}<li>Есть маркерная доска</li>{% endif %}
+                {% if space.has_wifi %}<li>Есть Wi-Fi</li>{% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

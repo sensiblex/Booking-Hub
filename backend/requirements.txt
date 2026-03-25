@@ -7,3 +7,4 @@ celery
 redis
 decouple
 whitenoise
+Pillow>=10.0.0

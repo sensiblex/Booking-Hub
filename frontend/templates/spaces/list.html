@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Помещения — Booking-Hub{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/spaces.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <!-- Заголовок и поиск -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <h1 class="fw-bold">Все помещения</h1>
+            <p class="text-muted">Найдите подходящее пространство для работы, встреч или мероприятий</p>
+        </div>
+        <div class="col-lg-4">
+            <form method="get" class="d-flex">
+                <input type="text" name="search" class="form-control me-2" 
+                       placeholder="Поиск по названию или адресу..." 
+                       value="{{ request.GET.search }}">
+                <button type="submit" class="btn btn-primary">Найти</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <!-- Боковая панель фильтров -->
+        <div class="col-lg-3">
+            <div class="filter-card p-4 rounded-3 sticky-top" style="top: 20px;">
+                <h5 class="mb-3">Фильтры</h5>
+                
+                <!-- Тип помещения -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Тип помещения</label>
+                    <select class="form-select" name="category">
+                        <option value="">Все типы</option>
+                        <option value="meeting">Переговорная</option>
+                        <option value="coworking">Коворкинг</option>
+                        <option value="auditorium">Аудитория</option>
+                        <option value="event">Мероприятие</option>
+                    </select>
+                </div>
+
+                <!-- Вместимость -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Вместимость (человек)</label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <input type="number" class="form-control" placeholder="От" name="capacity_min">
+                        </div>
+                        <div class="col-6">
+                            <input type="number" class="form-control" placeholder="До" name="capacity_max">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Цена за час -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Цена за час (₽)</label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <input type="number" class="form-control" placeholder="От" name="price_min">
+                        </div>
+                        <div class="col-6">
+                            <input type="number" class="form-control" placeholder="До" name="price_max">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Применить фильтры</button>
+            </div>
+        </div>
+
+        <!-- Список карточек помещений -->
+        <div class="col-lg-9">
+            <div class="row g-4" id="spaces-list">
+
+                <!-- Пример карточки (будет заменено на цикл Django) -->
+                {% for space in spaces %}
+                <div class="col-md-6 col-xl-4">
+                    <div class="card space-card">
+                        <img src="{% if space.image %}{{ space.image.url }}{% else %}{% static 'img/default-space.jpg' %}{% endif %}" 
+     class="card-img-top" 
+     alt="{{ space.name }}">
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ space.name }}</h5>
+                            <p class="text-muted small mb-2">{{ space.address }}</p>
+                            
+                            <div class="amenity mb-3">
+                                {{ space.capacity }} чел. • 
+                                {% if space.has_projector %}Проектор • {% endif %}
+                                {% if space.has_board %}Доска{% endif %}
+                            </div>
+
+                            <div class="mt-auto d-flex justify-content-between align-items-end">
+                                <div>
+                                    <span class="price">{{ space.price_per_hour }} ₽</span>
+                                    <small class="text-muted">/ час</small>
+                                </div>
+                                <a href="{% url 'spaces:detail' space.pk %}" 
+                                   class="btn btn-primary btn-sm px-4">Подробнее</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center py-5">
+                        <h5>К сожалению, по вашему запросу ничего не найдено</h5>
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

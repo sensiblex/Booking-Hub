@@ -1,9 +1,66 @@
-body {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+:root {
+    --primary: #6366f1;
+    --success: #10b981;
+    --neutral: #f8fafc;
+    --text: #0f172a;
 }
 
-main {
-  flex: 1;
+[data-bs-theme="dark"] {
+    --neutral: #1e2937;
+    --text: #f8fafc;
 }
+
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--neutral);
+    color: var(--text);
+}
+
+.navbar-brand {
+    color: var(--primary) !important;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+.btn-primary:hover {
+    background-color: #4f46e5;
+    border-color: #4f46e5;
+}
+
+.btn-success {
+    background-color: var(--success);
+    border-color: var(--success);
+}
+
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px rgba(99, 102, 241, 0.15);
+}
+
+.space-card img {
+    height: 200px;
+    object-fit: cover;
+    border-radius: 12px 12px 0 0;
+}
+
+.amenity-icon {
+    font-size: 1.4rem;
+    color: var(--primary);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
+}
+
+.status-available { color: #10b981; }
+.status-booked { color: #f59e0b; }
+.status-canceled { color: #ef4444; }
