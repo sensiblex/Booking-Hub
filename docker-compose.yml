@@ -1,27 +1,10 @@
 services:
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:   
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   backend:
     build: ./backend
     command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     volumes:
-      - ./backend:/app          # Монтируем backend
-      - ./frontend:/app/frontend # Монтируем frontend поверх
+      - ./backend:/app
+      - ./frontend:/app/frontend
       - static_volume:/static
     env_file:
       - .env
@@ -29,14 +12,11 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=db
-      - DB_PORT=5432
+      - DB_HOST=${DB_HOST}        # теперь берётся из .env
+      - DB_PORT=${DB_PORT}
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-    depends_on:
-      db:
-        condition: service_healthy
     ports:
       - "8000:8000"
 
@@ -52,5 +32,4 @@ services:
       - backend
 
 volumes:
-  postgres_data:
   static_volume:
