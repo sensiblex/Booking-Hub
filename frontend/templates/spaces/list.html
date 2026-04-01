@@ -1,125 +1,573 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Помещения — Booking-Hub{% endblock %}
+{% block title %}Каталог помещений — Booking-Hub{% endblock %}
 
-{% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/spaces.css' %}">
+{% block head_extra %}
+<style>
+/* ─── VARIABLES ─────────────────────────────────── */
+:root {
+  --sp-primary:       #01696f;
+  --sp-primary-light: #e6f2f2;
+  --sp-primary-dark:  #0c4e54;
+  --sp-text:          #1a1a1a;
+  --sp-muted:         #6b7280;
+  --sp-border:        #e5e7eb;
+  --sp-bg:            #f8f9fa;
+  --sp-surface:       #ffffff;
+  --sp-radius:        14px;
+  --sp-radius-sm:     8px;
+  --sp-shadow:        0 2px 8px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --sp-shadow-hover:  0 8px 24px rgba(1,105,111,.12), 0 2px 8px rgba(0,0,0,.06);
+  --sp-transition:    180ms cubic-bezier(.16,1,.3,1);
+}
+
+/* ─── PAGE ───────────────────────────────────────── */
+.spaces-page { background: var(--sp-bg); min-height: 100vh; }
+
+.page-header { padding: 2rem 0 1.5rem; }
+.page-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--sp-text); margin: 0 0 .25rem; }
+.page-header .subtitle { color: var(--sp-muted); font-size: .95rem; }
+
+/* ─── SEARCH BAR ─────────────────────────────────── */
+.search-bar-wrap { position: relative; }
+.search-bar-wrap .bi-search {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--sp-muted); font-size: 1rem; pointer-events: none;
+}
+.search-input {
+  padding-left: 2.75rem !important;
+  border-radius: var(--sp-radius-sm) !important;
+  border: 1.5px solid var(--sp-border) !important;
+  background: var(--sp-surface) !important;
+  transition: border-color var(--sp-transition), box-shadow var(--sp-transition);
+}
+.search-input:focus {
+  border-color: var(--sp-primary) !important;
+  box-shadow: 0 0 0 3px rgba(1,105,111,.12) !important;
+  outline: none !important;
+}
+
+/* ─── FILTER PANEL ───────────────────────────────── */
+.filter-panel {
+  background: var(--sp-surface);
+  border: 1.5px solid var(--sp-border);
+  border-radius: var(--sp-radius);
+  padding: 1.5rem;
+  position: sticky; top: 76px;
+}
+.filter-panel .panel-title {
+  font-size: .8rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--sp-muted); margin-bottom: 1.25rem;
+}
+.filter-section { margin-bottom: 1.5rem; }
+.filter-section:last-of-type { margin-bottom: 0; }
+.filter-label {
+  display: block; font-size: .82rem; font-weight: 600;
+  color: var(--sp-text); margin-bottom: .5rem;
+}
+.filter-select, .filter-input {
+  width: 100%; padding: .5rem .75rem;
+  border: 1.5px solid var(--sp-border); border-radius: var(--sp-radius-sm);
+  font-size: .875rem; color: var(--sp-text); background: var(--sp-surface);
+  transition: border-color var(--sp-transition), box-shadow var(--sp-transition);
+  appearance: none; -webkit-appearance: none;
+}
+.filter-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .75rem center; padding-right: 2rem; }
+.filter-select:focus, .filter-input:focus {
+  border-color: var(--sp-primary); box-shadow: 0 0 0 3px rgba(1,105,111,.12); outline: none;
+}
+.range-row { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+
+/* Chip toggles */
+.amenity-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.amenity-chip {
+  display: flex; align-items: center; gap: .35rem;
+  padding: .35rem .7rem; border-radius: 999px;
+  border: 1.5px solid var(--sp-border); background: var(--sp-surface);
+  font-size: .78rem; font-weight: 500; color: var(--sp-muted);
+  cursor: pointer; transition: all var(--sp-transition); user-select: none;
+}
+.amenity-chip i { font-size: .85rem; }
+.amenity-chip.active {
+  border-color: var(--sp-primary); background: var(--sp-primary-light);
+  color: var(--sp-primary);
+}
+.amenity-chip:hover:not(.active) { border-color: #9ca3af; color: var(--sp-text); }
+
+/* Price slider */
+.price-range-display {
+  display: flex; justify-content: space-between;
+  font-size: .8rem; color: var(--sp-muted); margin-top: .4rem;
+}
+.price-range-display span { font-weight: 600; color: var(--sp-primary); }
+
+.filter-reset {
+  width: 100%; padding: .5rem;
+  border: 1.5px solid var(--sp-border); border-radius: var(--sp-radius-sm);
+  background: none; font-size: .82rem; color: var(--sp-muted);
+  cursor: pointer; transition: all var(--sp-transition); margin-top: 1rem;
+}
+.filter-reset:hover { border-color: var(--sp-primary); color: var(--sp-primary); background: var(--sp-primary-light); }
+
+/* ─── RESULTS BAR ────────────────────────────────── */
+.results-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+.results-count { font-size: .875rem; color: var(--sp-muted); }
+.results-count strong { color: var(--sp-text); }
+.sort-select {
+  padding: .4rem .75rem; border: 1.5px solid var(--sp-border);
+  border-radius: var(--sp-radius-sm); font-size: .82rem;
+  color: var(--sp-text); background: var(--sp-surface); cursor: pointer;
+}
+.sort-select:focus { border-color: var(--sp-primary); outline: none; }
+
+/* ─── CARDS ──────────────────────────────────────── */
+.spaces-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; }
+
+.space-card {
+  background: var(--sp-surface);
+  border: 1.5px solid var(--sp-border);
+  border-radius: var(--sp-radius);
+  overflow: hidden;
+  transition: transform var(--sp-transition), box-shadow var(--sp-transition), border-color var(--sp-transition);
+  display: flex; flex-direction: column;
+  box-shadow: var(--sp-shadow);
+  cursor: pointer;
+}
+.space-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sp-shadow-hover);
+  border-color: rgba(1,105,111,.25);
+}
+
+/* Image */
+.card-thumb {
+  position: relative; overflow: hidden;
+  height: 180px; background: #e5e7eb;
+  flex-shrink: 0;
+}
+.card-thumb img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform .4s ease;
+}
+.space-card:hover .card-thumb img { transform: scale(1.04); }
+.card-thumb .card-badge {
+  position: absolute; top: .75rem; left: .75rem;
+  background: rgba(255,255,255,.92); backdrop-filter: blur(6px);
+  border-radius: 999px; padding: .25rem .65rem;
+  font-size: .72rem; font-weight: 600; color: var(--sp-primary);
+  border: 1px solid rgba(1,105,111,.2);
+  display: flex; align-items: center; gap: .3rem;
+}
+.card-thumb .card-badge i { font-size: .8rem; }
+.no-image-thumb {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #f0fafa 0%, #e6f2f2 100%);
+  color: var(--sp-primary); gap: .5rem;
+}
+.no-image-thumb i { font-size: 2.5rem; opacity: .4; }
+.no-image-thumb span { font-size: .72rem; color: var(--sp-muted); }
+
+/* Body */
+.card-body-inner { padding: 1.1rem 1.25rem 1.25rem; flex: 1; display: flex; flex-direction: column; }
+.card-name {
+  font-size: 1rem; font-weight: 700; color: var(--sp-text);
+  margin: 0 0 .25rem; line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.card-address {
+  font-size: .78rem; color: var(--sp-muted);
+  display: flex; align-items: center; gap: .3rem;
+  margin-bottom: .85rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.card-address i { font-size: .8rem; flex-shrink: 0; }
+
+/* Specs row */
+.card-specs {
+  display: flex; gap: .5rem; flex-wrap: wrap;
+  margin-bottom: .9rem;
+}
+.spec-chip {
+  display: flex; align-items: center; gap: .3rem;
+  background: var(--sp-bg); border-radius: 6px;
+  padding: .28rem .55rem; font-size: .75rem;
+  color: var(--sp-muted); font-weight: 500;
+  border: 1px solid var(--sp-border);
+}
+.spec-chip i { font-size: .78rem; }
+.spec-chip.highlight { background: var(--sp-primary-light); color: var(--sp-primary); border-color: rgba(1,105,111,.2); }
+
+/* Description */
+.card-desc {
+  font-size: .8rem; color: var(--sp-muted); line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; margin-bottom: .9rem; flex: 1;
+}
+
+/* Footer */
+.card-footer-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: .9rem; border-top: 1px solid var(--sp-border);
+  margin-top: auto;
+}
+.card-price .amount {
+  font-size: 1.2rem; font-weight: 800; color: var(--sp-primary); line-height: 1;
+}
+.card-price .per { font-size: .72rem; color: var(--sp-muted); margin-top: .1rem; }
+.card-btn {
+  padding: .5rem 1.1rem;
+  background: var(--sp-primary); color: #fff;
+  border: none; border-radius: var(--sp-radius-sm);
+  font-size: .82rem; font-weight: 600;
+  text-decoration: none; display: inline-flex; align-items: center; gap: .35rem;
+  transition: background var(--sp-transition), transform var(--sp-transition);
+}
+.card-btn:hover { background: var(--sp-primary-dark); color: #fff; transform: translateY(-1px); }
+.card-btn i { font-size: .8rem; }
+
+/* ─── EMPTY STATE ────────────────────────────────── */
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; padding: 4rem 2rem;
+  color: var(--sp-muted);
+}
+.empty-state i { font-size: 3rem; opacity: .3; margin-bottom: 1rem; }
+.empty-state h5 { font-size: 1.05rem; color: var(--sp-text); margin-bottom: .4rem; }
+.empty-state p { font-size: .875rem; max-width: 32ch; }
+
+/* ─── RESPONSIVE ─────────────────────────────────── */
+@media (max-width: 991px) {
+  .filter-panel { position: static; margin-bottom: 1.25rem; }
+  .spaces-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+}
+@media (max-width: 576px) {
+  .spaces-grid { grid-template-columns: 1fr; }
+}
+</style>
 {% endblock %}
 
 {% block content %}
+<div class="spaces-page">
+<div class="container-fluid" style="max-width:1280px; padding: 0 1.5rem;">
 
-<div class="container py-4">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+      <div>
+        <h1>Каталог помещений</h1>
+        <p class="subtitle">Найдите идеальное пространство для работы, встреч или мероприятий</p>
+      </div>
+      <div class="search-bar-wrap" style="min-width:280px; max-width:360px; width:100%;">
+        <i class="bi bi-search"></i>
+        <input id="js-search" type="text" class="form-control search-input"
+               placeholder="Поиск по названию или адресу…"
+               value="{{ request.GET.search|default:'' }}">
+      </div>
+    </div>
+  </div>
 
-    <!-- Заголовок и поиск -->
-    <div class="row mb-4">
-        <div class="col-lg-8">
-            <h1 class="fw-bold">Все помещения</h1>
-            <p class="text-muted">Найдите подходящее пространство для работы, встреч или мероприятий</p>
+  <div class="row g-0" style="gap: 1.5rem; flex-wrap: nowrap; align-items: flex-start;">
+
+    <!-- ── FILTER PANEL ── -->
+    <div style="width: 260px; flex-shrink: 0;">
+      <div class="filter-panel">
+        <p class="panel-title">Фильтры</p>
+
+        <!-- Тип -->
+        <div class="filter-section">
+          <label class="filter-label">Тип помещения</label>
+          <select id="js-type" class="filter-select">
+            <option value="">Все типы</option>
+            <option value="Переговорная">Переговорная</option>
+            <option value="Конференц">Конференц-зал</option>
+            <option value="Лофт">Лофт / Open space</option>
+            <option value="Кабинет">Кабинет</option>
+            <option value="Тренинг">Учебный класс</option>
+            <option value="Подиум">Подиум / Зал</option>
+          </select>
         </div>
-        <div class="col-lg-4">
-            <form method="get" class="d-flex">
-                <input type="text" name="search" class="form-control me-2" 
-                       placeholder="Поиск по названию или адресу..." 
-                       value="{{ request.GET.search }}">
-                <button type="submit" class="btn btn-primary">Найти</button>
-            </form>
+
+        <!-- Вместимость -->
+        <div class="filter-section">
+          <label class="filter-label">Вместимость (чел.)</label>
+          <div class="range-row">
+            <input id="js-cap-min" class="filter-input" type="number" placeholder="От" min="1">
+            <input id="js-cap-max" class="filter-input" type="number" placeholder="До" min="1">
+          </div>
         </div>
+
+        <!-- Цена -->
+        <div class="filter-section">
+          <label class="filter-label">Цена за час (₽)</label>
+          <div class="range-row">
+            <input id="js-price-min" class="filter-input" type="number" placeholder="От" min="0">
+            <input id="js-price-max" class="filter-input" type="number" placeholder="До" min="0">
+          </div>
+          <div class="price-range-display">
+            <span id="price-hint">Любая цена</span>
+          </div>
+        </div>
+
+        <!-- Оснащение -->
+        <div class="filter-section">
+          <label class="filter-label">Оснащение</label>
+          <div class="amenity-chips">
+            <div class="amenity-chip" data-amenity="projector">
+              <i class="bi bi-projector"></i> Проектор
+            </div>
+            <div class="amenity-chip" data-amenity="board">
+              <i class="bi bi-easel2"></i> Доска
+            </div>
+            <div class="amenity-chip" data-amenity="wifi">
+              <i class="bi bi-wifi"></i> Wi-Fi
+            </div>
+          </div>
+        </div>
+
+        <button id="js-reset" class="filter-reset">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Сбросить фильтры
+        </button>
+      </div>
     </div>
 
-    <div class="row">
+    <!-- ── CARDS ── -->
+    <div style="flex: 1; min-width: 0;">
+      <!-- Results bar -->
+      <div class="results-bar">
+        <p class="results-count mb-0">
+          Найдено: <strong id="js-count">{{ spaces|length }}</strong> помещений
+        </p>
+        <select id="js-sort" class="sort-select">
+          <option value="default">По умолчанию</option>
+          <option value="price_asc">Цена: по возрастанию</option>
+          <option value="price_desc">Цена: по убыванию</option>
+          <option value="capacity_asc">Вместимость: меньше</option>
+          <option value="capacity_desc">Вместимость: больше</option>
+        </select>
+      </div>
 
-        <!-- Боковая панель фильтров -->
-        <div class="col-lg-3">
-            <div class="filter-card p-4 rounded-3 sticky-top" style="top: 20px;">
-                <h5 class="mb-3">Фильтры</h5>
-                
-                <!-- Тип помещения -->
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Тип помещения</label>
-                    <select class="form-select" name="category">
-                        <option value="">Все типы</option>
-                        <option value="meeting">Переговорная</option>
-                        <option value="coworking">Коворкинг</option>
-                        <option value="auditorium">Аудитория</option>
-                        <option value="event">Мероприятие</option>
-                    </select>
-                </div>
+      <!-- Grid -->
+      <div class="spaces-grid" id="spaces-grid">
 
-                <!-- Вместимость -->
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Вместимость (человек)</label>
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <input type="number" class="form-control" placeholder="От" name="capacity_min">
-                        </div>
-                        <div class="col-6">
-                            <input type="number" class="form-control" placeholder="До" name="capacity_max">
-                        </div>
-                    </div>
-                </div>
+        {% for space in spaces %}
+        <div class="space-card"
+             data-name="{{ space.name|lower }}"
+             data-address="{{ space.address|lower }}"
+             data-capacity="{{ space.capacity }}"
+             data-price="{{ space.price_per_hour }}"
+             data-projector="{{ space.has_projector|lower }}"
+             data-board="{{ space.has_board|lower }}"
+             data-wifi="{{ space.has_wifi|lower }}"
+             onclick="window.location='{% url 'spaces:detail' space.pk %}'">
 
-                <!-- Цена за час -->
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Цена за час (₽)</label>
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <input type="number" class="form-control" placeholder="От" name="price_min">
-                        </div>
-                        <div class="col-6">
-                            <input type="number" class="form-control" placeholder="До" name="price_max">
-                        </div>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary w-100">Применить фильтры</button>
+          <!-- Image -->
+          <div class="card-thumb">
+            {% if space.image %}
+              <img src="{{ space.image.url }}" alt="{{ space.name }}" loading="lazy">
+            {% else %}
+              <div class="no-image-thumb">
+                <i class="bi bi-building"></i>
+                <span>Фото скоро появится</span>
+              </div>
+            {% endif %}
+            <div class="card-badge">
+              <i class="bi bi-people-fill"></i>
+              {{ space.capacity }} чел.
             </div>
+          </div>
+
+          <!-- Body -->
+          <div class="card-body-inner">
+            <h3 class="card-name">{{ space.name }}</h3>
+            <p class="card-address">
+              <i class="bi bi-geo-alt"></i>
+              {{ space.address }}
+            </p>
+
+            <!-- Specs -->
+            <div class="card-specs">
+              {% if space.has_wifi %}
+              <div class="spec-chip highlight">
+                <i class="bi bi-wifi"></i> Wi-Fi
+              </div>
+              {% endif %}
+              {% if space.has_projector %}
+              <div class="spec-chip highlight">
+                <i class="bi bi-projector"></i> Проектор
+              </div>
+              {% endif %}
+              {% if space.has_board %}
+              <div class="spec-chip highlight">
+                <i class="bi bi-easel2"></i> Доска
+              </div>
+              {% endif %}
+              {% if not space.has_wifi and not space.has_projector and not space.has_board %}
+              <div class="spec-chip"><i class="bi bi-info-circle"></i> Базовое оснащение</div>
+              {% endif %}
+            </div>
+
+            <!-- Description -->
+            {% if space.description %}
+            <p class="card-desc">{{ space.description }}</p>
+            {% endif %}
+
+            <!-- Footer -->
+            <div class="card-footer-inner">
+              <div class="card-price">
+                <div class="amount">{{ space.price_per_hour }} ₽</div>
+                <div class="per">за час</div>
+              </div>
+              <a href="{% url 'spaces:detail' space.pk %}" class="card-btn" onclick="event.stopPropagation()">
+                Подробнее <i class="bi bi-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+
+        </div>
+        {% empty %}
+        <div class="empty-state">
+          <i class="bi bi-building-x"></i>
+          <h5>Помещений пока нет</h5>
+          <p>Запустите <code>seed_spaces</code> чтобы добавить тестовые данные</p>
+        </div>
+        {% endfor %}
+
+        <!-- JS empty placeholder -->
+        <div class="empty-state" id="js-empty" style="display:none;">
+          <i class="bi bi-search"></i>
+          <h5>Ничего не найдено</h5>
+          <p>Попробуйте изменить фильтры или поисковый запрос</p>
         </div>
 
-        <!-- Список карточек помещений -->
-        <div class="col-lg-9">
-            <div class="row g-4" id="spaces-list">
-
-                <!-- Пример карточки (будет заменено на цикл Django) -->
-                {% for space in spaces %}
-                <div class="col-md-6 col-xl-4">
-                    <div class="card space-card">
-                        <img src="{% if space.image %}{{ space.image.url }}{% else %}{% static 'img/default-space.jpg' %}{% endif %}" 
-     class="card-img-top" 
-     alt="{{ space.name }}">
-                        
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">{{ space.name }}</h5>
-                            <p class="text-muted small mb-2">{{ space.address }}</p>
-                            
-                            <div class="amenity mb-3">
-                                {{ space.capacity }} чел. • 
-                                {% if space.has_projector %}Проектор • {% endif %}
-                                {% if space.has_board %}Доска{% endif %}
-                            </div>
-
-                            <div class="mt-auto d-flex justify-content-between align-items-end">
-                                <div>
-                                    <span class="price">{{ space.price_per_hour }} ₽</span>
-                                    <small class="text-muted">/ час</small>
-                                </div>
-                                <a href="{% url 'spaces:detail' space.pk %}" 
-                                   class="btn btn-primary btn-sm px-4">Подробнее</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="col-12">
-                    <div class="alert alert-info text-center py-5">
-                        <h5>К сожалению, по вашему запросу ничего не найдено</h5>
-                    </div>
-                </div>
-                {% endfor %}
-
-            </div>
-        </div>
+      </div>
     </div>
+  </div>
+
 </div>
+</div>
+{% endblock %}
 
+{% block extra_js %}
+<script>
+(function () {
+  'use strict';
+
+  const grid    = document.getElementById('spaces-grid');
+  const counter = document.getElementById('js-count');
+  const jsEmpty = document.getElementById('js-empty');
+  const cards   = () => [...grid.querySelectorAll('.space-card')];
+
+  // ── inputs ──
+  const elSearch   = document.getElementById('js-search');
+  const elType     = document.getElementById('js-type');
+  const elCapMin   = document.getElementById('js-cap-min');
+  const elCapMax   = document.getElementById('js-cap-max');
+  const elPriceMin = document.getElementById('js-price-min');
+  const elPriceMax = document.getElementById('js-price-max');
+  const elSort     = document.getElementById('js-sort');
+  const elReset    = document.getElementById('js-reset');
+  const elChips    = [...document.querySelectorAll('.amenity-chip')];
+  const elPriceHint = document.getElementById('price-hint');
+
+  // ── chip toggle ──
+  elChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chip.classList.toggle('active');
+      run();
+    });
+  });
+
+  function activeAmenities() {
+    return elChips.filter(c => c.classList.contains('active'))
+                  .map(c => c.dataset.amenity);
+  }
+
+  // ── main filter + sort ──
+  function run() {
+    const q        = elSearch.value.trim().toLowerCase();
+    const type     = elType.value.toLowerCase();
+    const capMin   = parseInt(elCapMin.value)   || 0;
+    const capMax   = parseInt(elCapMax.value)   || Infinity;
+    const priceMin = parseInt(elPriceMin.value) || 0;
+    const priceMax = parseInt(elPriceMax.value) || Infinity;
+    const amenities = activeAmenities();
+
+    // price hint
+    if (priceMin || priceMax !== Infinity) {
+      elPriceHint.textContent =
+        (priceMin ? priceMin + ' ₽' : '0 ₽') + ' — ' +
+        (priceMax !== Infinity ? priceMax + ' ₽' : '∞');
+    } else {
+      elPriceHint.textContent = 'Любая цена';
+    }
+
+    const all = cards();
+    let visible = [];
+
+    all.forEach(card => {
+      const name     = card.dataset.name;
+      const address  = card.dataset.address;
+      const capacity = parseInt(card.dataset.capacity);
+      const price    = parseInt(card.dataset.price);
+      const proj     = card.dataset.projector === 'true';
+      const board    = card.dataset.board     === 'true';
+      const wifi     = card.dataset.wifi      === 'true';
+
+      let ok = true;
+      if (q     && !name.includes(q) && !address.includes(q)) ok = false;
+      if (type  && !name.includes(type))   ok = false;
+      if (capacity < capMin || capacity > capMax) ok = false;
+      if (price    < priceMin || price > priceMax) ok = false;
+      if (amenities.includes('projector') && !proj)  ok = false;
+      if (amenities.includes('board')     && !board) ok = false;
+      if (amenities.includes('wifi')      && !wifi)  ok = false;
+
+      card.style.display = ok ? '' : 'none';
+      if (ok) visible.push(card);
+    });
+
+    // sort
+    const sortVal = elSort.value;
+    if (sortVal !== 'default') {
+      visible.sort((a, b) => {
+        const ap = parseInt(a.dataset.price);
+        const bp = parseInt(b.dataset.price);
+        const ac = parseInt(a.dataset.capacity);
+        const bc = parseInt(b.dataset.capacity);
+        if (sortVal === 'price_asc')      return ap - bp;
+        if (sortVal === 'price_desc')     return bp - ap;
+        if (sortVal === 'capacity_asc')   return ac - bc;
+        if (sortVal === 'capacity_desc')  return bc - ac;
+        return 0;
+      });
+      visible.forEach(c => grid.appendChild(c));
+    }
+
+    counter.textContent = visible.length;
+    jsEmpty.style.display = visible.length === 0 ? 'flex' : 'none';
+  }
+
+  // ── reset ──
+  elReset.addEventListener('click', () => {
+    elSearch.value = elType.value = elCapMin.value =
+    elCapMax.value = elPriceMin.value = elPriceMax.value = '';
+    elChips.forEach(c => c.classList.remove('active'));
+    elSort.value = 'default';
+    run();
+  });
+
+  // ── bind ──
+  [elSearch, elType, elCapMin, elCapMax, elPriceMin, elPriceMax, elSort]
+    .forEach(el => el.addEventListener('input', run));
+
+  // initial run (preserve URL search param)
+  run();
+})();
+</script>
 {% endblock %}
