@@ -1,7 +1,10 @@
 services:
   backend:
     build: ./backend
-    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    command: >-
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py seed_spaces &&
+             python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./backend:/app
       - ./frontend:/app/frontend
@@ -12,7 +15,7 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=${DB_HOST}        # теперь берётся из .env
+      - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG}
