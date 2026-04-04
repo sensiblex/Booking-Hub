@@ -1,134 +1,137 @@
-{% extends 'base.html' %}
+{% extends 'admin/base_admin.html' %}
 {% load static %}
 
-{% block title %}Управление пользователями — Booking-Hub{% endblock %}
+{% block title %}Пользователи — Booking-Hub Admin{% endblock %}
+{% block nav_users %}active{% endblock %}
 
-{% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="fw-bold mb-1"><i class="bi bi-people-fill text-primary me-2"></i>Пользователи</h2>
-        <p class="text-muted mb-0">Всего: <strong>{{ users|length }}</strong></p>
-    </div>
+{% block admin_content %}
+
+<div class="adm-page-header">
+  <div>
+    <h1 class="adm-page-title"><i class="bi bi-people me-2" style="color:#6366f1;"></i>Пользователи</h1>
+    <p class="adm-page-subtitle">Всего: <strong>{{ users|length }}</strong></p>
+  </div>
+  <a href="/admin/users/customuser/add/" class="adm-btn adm-btn-primary">
+    <i class="bi bi-person-plus"></i> Добавить
+  </a>
 </div>
 
-<!-- Фильтры -->
-<div class="card shadow-sm mb-4">
-    <div class="card-body py-3">
-        <form method="get" class="row g-2 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label text-muted small mb-1">Поиск</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                    <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Имя, email...">
-                </div>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label text-muted small mb-1">Роль</label>
-                <select name="role" class="form-select">
-                    <option value="">Все роли</option>
-                    <option value="guest" {% if request.GET.role == 'guest' %}selected{% endif %}>Гость</option>
-                    <option value="client" {% if request.GET.role == 'client' %}selected{% endif %}>Клиент</option>
-                    <option value="manager" {% if request.GET.role == 'manager' %}selected{% endif %}>Менеджер</option>
-                    <option value="administrator" {% if request.GET.role == 'administrator' %}selected{% endif %}>Администратор</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label text-muted small mb-1">Статус</label>
-                <select name="is_active" class="form-select">
-                    <option value="">Все</option>
-                    <option value="1" {% if request.GET.is_active == '1' %}selected{% endif %}>Активные</option>
-                    <option value="0" {% if request.GET.is_active == '0' %}selected{% endif %}>Заблокированные</option>
-                </select>
-            </div>
-            <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary w-100">Применить</button>
-                <a href="{% url 'users:admin_users' %}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
-            </div>
-        </form>
-    </div>
+<!-- Filters -->
+<div class="adm-card mb-4">
+  <div class="adm-card-header"><span><i class="bi bi-funnel"></i> Фильтры</span></div>
+  <div class="adm-card-body">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="adm-form-label">Поиск</label>
+        <div class="input-group">
+          <span class="input-group-text" style="background:#f8faff;border-color:#e2e8f0;"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" name="q" value="{{ request.GET.q }}" class="adm-input" placeholder="Имя, email..." style="border-radius:0 10px 10px 0;">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="adm-form-label">Роль</label>
+        <select name="role" class="adm-input">
+          <option value="">Все роли</option>
+          <option value="guest" {% if request.GET.role == 'guest' %}selected{% endif %}>Гость</option>
+          <option value="client" {% if request.GET.role == 'client' %}selected{% endif %}>Клиент</option>
+          <option value="manager" {% if request.GET.role == 'manager' %}selected{% endif %}>Менеджер</option>
+          <option value="administrator" {% if request.GET.role == 'administrator' %}selected{% endif %}>Администратор</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="adm-form-label">Статус</label>
+        <select name="is_active" class="adm-input">
+          <option value="">Все</option>
+          <option value="1" {% if request.GET.is_active == '1' %}selected{% endif %}>Активные</option>
+          <option value="0" {% if request.GET.is_active == '0' %}selected{% endif %}>Заблокированные</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="adm-btn adm-btn-primary w-100">Применить</button>
+        <a href="{% url 'users:admin_users' %}" class="adm-btn adm-btn-ghost"><i class="bi bi-x-lg"></i></a>
+      </div>
+    </form>
+  </div>
 </div>
 
-<!-- Таблица -->
-<div class="card shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th class="ps-4">#</th>
-                    <th>Пользователь</th>
-                    <th>Email</th>
-                    <th>Роль</th>
-                    <th>Статус</th>
-                    <th>Дата регистрации</th>
-                    <th class="text-end pe-4">Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for u in users %}
-                <tr>
-                    <td class="ps-4 text-muted small">{{ u.id }}</td>
-                    <td>
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width:36px;height:36px;flex-shrink:0">
-                                <span class="fw-semibold text-primary small">{{ u.username|slice:':1'|upper }}</span>
-                            </div>
-                            <div>
-                                <div class="fw-semibold">{{ u.username }}</div>
-                                {% if u.first_name or u.last_name %}
-                                    <div class="text-muted small">{{ u.first_name }} {{ u.last_name }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </td>
-                    <td class="text-muted">{{ u.email|default:'—' }}</td>
-                    <td>
-                        <form method="post" action="{% url 'users:admin_change_role' u.id %}">
-                            {% csrf_token %}
-                            <select name="role" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width:130px">
-                                {% for value, label in role_choices %}
-                                    <option value="{{ value }}" {% if u.role == value %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </form>
-                    </td>
-                    <td>
-                        {% if u.is_active %}
-                            <span class="badge bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>Активен</span>
-                        {% else %}
-                            <span class="badge bg-danger-subtle text-danger"><i class="bi bi-slash-circle me-1"></i>Заблокирован</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-muted small">{{ u.date_joined|date:'d.m.Y H:i' }}</td>
-                    <td class="text-end pe-4">
-                        <div class="d-flex justify-content-end gap-1">
-                            {% if u.is_active %}
-                                <form method="post" action="{% url 'users:admin_toggle_active' u.id %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Заблокировать">
-                                        <i class="bi bi-slash-circle"></i>
-                                    </button>
-                                </form>
-                            {% else %}
-                                <form method="post" action="{% url 'users:admin_toggle_active' u.id %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-outline-success" title="Разблокировать">
-                                        <i class="bi bi-check-circle"></i>
-                                    </button>
-                                </form>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7" class="text-center py-5 text-muted">
-                        <i class="bi bi-people fs-1 d-block mb-2"></i>
-                        Пользователи не найдены
-                    </td>
-                </tr>
+<!-- Table -->
+<div class="adm-card">
+  <div class="adm-table-wrap">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th style="padding-left:20px;">#</th>
+          <th>Пользователь</th>
+          <th>Email</th>
+          <th>Роль</th>
+          <th>Статус</th>
+          <th>Регистрация</th>
+          <th style="text-align:right; padding-right:20px;">Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td style="padding-left:20px;" class="text-muted" style="font-size:12px;">{{ u.id }}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="adm-avatar">{{ u.username|slice:':1'|upper }}</div>
+              <div>
+                <div class="fw-semibold" style="font-size:14px;">{{ u.username }}</div>
+                {% if u.first_name or u.last_name %}
+                  <div class="text-muted" style="font-size:12px;">{{ u.first_name }} {{ u.last_name }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </td>
+          <td style="color:#64748b;font-size:13px;">{{ u.email|default:'—' }}</td>
+          <td>
+            <form method="post" action="{% url 'users:admin_change_role' u.id %}">
+              {% csrf_token %}
+              <select name="role" class="adm-input" style="width:auto;min-width:130px;padding:5px 10px;font-size:13px;" onchange="this.form.submit()">
+                {% for value, label in role_choices %}
+                  <option value="{{ value }}" {% if u.role == value %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
+              </select>
+            </form>
+          </td>
+          <td>
+            {% if u.is_active %}
+              <span class="adm-badge adm-badge-success"><i class="bi bi-check-circle"></i> Активен</span>
+            {% else %}
+              <span class="adm-badge adm-badge-danger"><i class="bi bi-slash-circle"></i> Блок</span>
+            {% endif %}
+          </td>
+          <td style="font-size:12px;color:#64748b;">{{ u.date_joined|date:'d.m.Y H:i' }}</td>
+          <td style="text-align:right;padding-right:20px;">
+            {% if u.is_active %}
+              <form method="post" action="{% url 'users:admin_toggle_active' u.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="adm-btn adm-btn-sm adm-btn-danger" title="Заблокировать">
+                  <i class="bi bi-slash-circle"></i>
+                </button>
+              </form>
+            {% else %}
+              <form method="post" action="{% url 'users:admin_toggle_active' u.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="adm-btn adm-btn-sm adm-btn-success" title="Разблокировать">
+                  <i class="bi bi-check-circle"></i>
+                </button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" style="text-align:center;padding:48px 20px;color:#94a3b8;">
+            <i class="bi bi-people" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+            Пользователи не найдены
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
+
 {% endblock %}
