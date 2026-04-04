@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView, TemplateView
+from django.conf import settings
+from django.conf.urls.static import static
 from apps.users.views_admin import admin_dashboard
 
 urlpatterns = [
@@ -18,8 +20,12 @@ urlpatterns = [
     path('spaces/', include('apps.spaces.urls')),
 
     # Главная страница — редирект на логин
-    path('', RedirectView.as_view(url='/users/login/', permanent=False), name='home'),
+    path('', RedirectView.as_view(url='/users/login/', permanent=False), name='home_redirect'),
 
-    # favicon (чтобы не было 404 ошибки)
+    # favicon
     path('favicon.ico', RedirectView.as_view(url='/static/favicon.ico', permanent=True)),
 ]
+
+# Раздача медиафайлов в режиме разработки
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

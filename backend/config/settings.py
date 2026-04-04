@@ -20,7 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     'apps.users',
     'apps.spaces',
     'apps.bookings',
@@ -58,9 +58,14 @@ TEMPLATES = [
 ROOT_URLCONF = 'config.urls'
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# Static files
 STATIC_URL = '/static/'
 STATIC_ROOT = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'frontend' / 'static']
+
+# Media files (uploaded images, etc.)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 DATABASES = {
     'default': {
