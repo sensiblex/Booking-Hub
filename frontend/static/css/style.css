@@ -1,0 +1,37 @@
+/* Hero Section */
+.hero {
+    background: linear-gradient(rgba(13, 110, 253, 0.85), rgba(13, 110, 253, 0.9)), 
+                url("{% static 'img/hero-bg.jpg' %}") center/cover no-repeat;
+    min-height: 600px;
+    display: flex;
+    align-items: center;
+}
+
+.step-number {
+    width: 60px;
+    height: 60px;
+    background: #0d6efd;
+    color: white;
+    font-size: 1.8rem;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+}
+
+/* Карточки помещений */
+.space-card {
+    transition: all 0.3s ease;
+}
+
+.space-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12) !important;
+}
+
+.card-img-top {
+    height: 220px;
+    object-fit: cover;
+}

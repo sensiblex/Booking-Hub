@@ -5,11 +5,22 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-COPY requirements.txt .
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev gcc libjpeg-dev zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# requirements.txt лежит в backend/ — путь относительно контекста (root)
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Копируем весь backend
+COPY backend/ .
+
+# Копируем frontend (доступен теперь так как контекст — root)
+COPY frontend/ /app/frontend/
+
+RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8000
 
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+ENTRYPOINT ["/app/entrypoint.sh"]

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div style="margin: -24px; overflow-x: hidden;">
+  <div class="adm-wrapper">
+
+    <!-- Sidebar -->
+    <aside class="adm-sidebar">
+      <a class="adm-sidebar-brand" href="{% url 'admin_dashboard' %}">
+        <i class="bi bi-shield-check"></i>
+        <span>Управление</span>
+      </a>
+
+      <span class="adm-nav-section">Обзор</span>
+      <a class="adm-nav-link {% block nav_dashboard %}{% endblock %}" href="{% url 'admin_dashboard' %}">
+        <i class="bi bi-speedometer2"></i> Дашборд
+      </a>
+
+      <span class="adm-nav-section">Пользователи</span>
+      <a class="adm-nav-link {% block nav_users %}{% endblock %}" href="{% url 'users:admin_users' %}">
+        <i class="bi bi-people"></i> Все пользователи
+      </a>
+
+      <span class="adm-nav-section">Помещения</span>
+      <a class="adm-nav-link {% block nav_spaces %}{% endblock %}" href="{% url 'admin_spaces' %}">
+        <i class="bi bi-building"></i> Все помещения
+      </a>
+      <a class="adm-nav-link" href="{% url 'admin_space_create' %}">
+        <i class="bi bi-plus-square"></i> Добавить
+      </a>
+
+      <span class="adm-nav-section">Бронирования</span>
+      <a class="adm-nav-link {% block nav_bookings %}{% endblock %}" href="{% url 'admin_bookings' %}">
+        <i class="bi bi-calendar-check"></i> Все брони
+      </a>
+
+      <span class="adm-nav-section">Платежи</span>
+      <a class="adm-nav-link {% block nav_payments %}{% endblock %}" href="{% url 'admin_payments' %}">
+        <i class="bi bi-credit-card"></i> Платежи
+      </a>
+
+      <span class="adm-nav-section">Система</span>
+      <a class="adm-nav-link" href="/">
+        <i class="bi bi-house"></i> На сайт
+      </a>
+    </aside>
+
+    <!-- Main -->
+    <main class="adm-main">
+      {% if messages %}
+        {% for msg in messages %}
+          <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %} alert-dismissible fade show mb-3" role="alert">
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+      {% block admin_content %}{% endblock %}
+    </main>
+
+  </div>
+</div>
+{% endblock %}

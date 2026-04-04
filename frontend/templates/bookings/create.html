@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Создать бронь{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <h2>Новая бронь</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <!-- Поля формы от Амира -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">Дата начала <input type="date" class="form-control"></div>
+                        <div class="col-md-6 mb-3">Дата окончания <input type="date" class="form-control"></div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 py-3">Проверить доступность и оплатить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

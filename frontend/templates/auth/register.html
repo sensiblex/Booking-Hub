@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Регистрация — Booking-Hub{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="text-center mb-4">Создать аккаунт</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">Имя пользователя</label>
+                        <input type="text" name="username" id="id_username" class="form-control" required>
+                        {% if form.username.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_email" class="form-label">Email</label>
+                        <input type="email" name="email" id="id_email" class="form-control" required>
+                        {% if form.email.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.email.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_password1" class="form-label">Пароль</label>
+                        <input type="password" name="password1" id="id_password1" class="form-control" required>
+                        {% if form.password1.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.password1.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text text-muted small">
+                            Пароль должен содержать минимум 8 символов и не быть слишком простым.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="id_password2" class="form-label">Подтверждение пароля</label>
+                        <input type="password" name="password2" id="id_password2" class="form-control" required>
+                        {% if form.password2.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.password2.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 py-3">Зарегистрироваться</button>
+                </form>
+                <p class="text-center mt-4 text-muted">Уже есть аккаунт? <a href="{% url 'users:login' %}">Войти</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

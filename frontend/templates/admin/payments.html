@@ -1,0 +1,84 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}Платежи — Booking-Hub Admin{% endblock %}
+{% block nav_payments %}active{% endblock %}
+
+{% block admin_content %}
+
+<div class="adm-page-header">
+  <div>
+    <h1 class="adm-page-title"><i class="bi bi-credit-card me-2" style="color:#ef4444;"></i>Платежи</h1>
+    <p class="adm-page-subtitle">Всего: <strong>{{ payments|length }}</strong></p>
+  </div>
+</div>
+
+{% if status_choices %}
+<div class="adm-card mb-4">
+  <div class="adm-card-header"><span><i class="bi bi-funnel"></i> Фильтры</span></div>
+  <div class="adm-card-body">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="adm-form-label">Статус</label>
+        <select name="status" class="adm-input">
+          <option value="">Все</option>
+          {% for val, label in status_choices %}
+            <option value="{{ val }}" {% if request.GET.status == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3 d-flex gap-2 align-self-end">
+        <button type="submit" class="adm-btn adm-btn-primary w-100">Применить</button>
+        <a href="{% url 'admin_payments' %}" class="adm-btn adm-btn-ghost"><i class="bi bi-x-lg"></i></a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<div class="adm-card">
+  <div class="adm-table-wrap">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th style="padding-left:20px;">#</th>
+          <th>Бронь</th>
+          <th>Сумма</th>
+          <th>Способ</th>
+          <th>Статус</th>
+          <th>Дата</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td style="padding-left:20px;color:#94a3b8;font-size:12px;">{{ p.id }}</td>
+          <td style="font-size:13px;">{{ p.booking.id|default:'—' }}</td>
+          <td style="font-size:14px;font-weight:600;">{{ p.amount|default:'—' }} ₽</td>
+          <td style="font-size:13px;color:#64748b;">{{ p.method|default:'—' }}</td>
+          <td>
+            {% if p.status == 'paid' %}
+              <span class="adm-badge adm-badge-success"><i class="bi bi-check-circle"></i> Оплачено</span>
+            {% elif p.status == 'pending' %}
+              <span class="adm-badge adm-badge-warning"><i class="bi bi-hourglass-split"></i> Ожидает</span>
+            {% elif p.status == 'refunded' %}
+              <span class="adm-badge adm-badge-info"><i class="bi bi-arrow-counterclockwise"></i> Возврат</span>
+            {% else %}
+              <span class="adm-badge adm-badge-muted">{{ p.status|default:'—' }}</span>
+            {% endif %}
+          </td>
+          <td style="font-size:12px;color:#64748b;">{{ p.created_at|date:'d.m.Y H:i'|default:'—' }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" style="text-align:center;padding:48px;color:#94a3b8;">
+            <i class="bi bi-receipt" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+            Платежей пока нет
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
