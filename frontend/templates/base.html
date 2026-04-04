@@ -38,6 +38,15 @@
 
                     <ul class="navbar-nav align-items-center">
                         {% if user.is_authenticated %}
+                            {% if user.is_staff or user.role == 'administrator' %}
+                            <li class="nav-item me-2">
+                                <a class="btn btn-outline-primary btn-sm rounded-3 d-flex align-items-center gap-1"
+                                   href="{% url 'admin_dashboard' %}">
+                                    <i class="bi bi-shield-check"></i>
+                                    <span>Админ-панель</span>
+                                </a>
+                            </li>
+                            {% endif %}
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" 
                                    role="button" data-bs-toggle="dropdown">
@@ -47,7 +56,6 @@
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" href="{% url 'users:profile' %}">Профиль</a></li>
                                     {% comment %}
-                                    <!-- Эти ссылки будут добавлены позже, когда будут готовы соответствующие приложения -->
                                     <li><a class="dropdown-item" href="{% url 'bookings:history' %}">Мои бронирования</a></li>
                                     {% endcomment %}
                                     {% if user.role in 'manager,administrator' %}
