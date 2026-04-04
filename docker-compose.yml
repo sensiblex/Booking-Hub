@@ -22,7 +22,7 @@ services:
 
   backend:
     build:
-      context: .          # корень проекта — Docker видит и backend/ и frontend/
+      context: .
       dockerfile: backend/Dockerfile
     container_name: booking-hub-backend
     restart: unless-stopped
@@ -33,6 +33,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/api/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   nginx:
     image: nginx:alpine
@@ -45,7 +51,8 @@ services:
       - static_volume:/static:ro
       - media_volume:/media:ro
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   postgres_data:
