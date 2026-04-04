@@ -60,7 +60,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Static files
 STATIC_URL = '/static/'
-STATIC_ROOT = '/static/'
+STATIC_ROOT = BASE_DIR / 'static'
 STATICFILES_DIRS = [BASE_DIR / 'frontend' / 'static']
 
 # Media files (uploaded images, etc.)
