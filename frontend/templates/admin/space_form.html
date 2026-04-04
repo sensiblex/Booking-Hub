@@ -1,0 +1,100 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}{{ action }} помещение — Booking-Hub Admin{% endblock %}
+{% block nav_spaces %}active{% endblock %}
+
+{% block admin_content %}
+
+<div class="adm-page-header">
+  <div>
+    <h1 class="adm-page-title">{{ action }} помещение</h1>
+    <p class="adm-page-subtitle">
+      {% if space %}Редактирование: <strong>{{ space.name }}</strong>{% else %}Новое помещение{% endif %}
+    </p>
+  </div>
+  <a href="{% url 'admin_spaces' %}" class="adm-btn adm-btn-ghost">
+    <i class="bi bi-arrow-left"></i> Назад
+  </a>
+</div>
+
+<div class="adm-card" style="max-width:720px;">
+  <div class="adm-card-header"><span><i class="bi bi-building"></i> Данные помещения</span></div>
+  <div class="adm-card-body">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="row g-3">
+
+        <div class="col-12">
+          <label class="adm-form-label">Название *</label>
+          <input type="text" name="name" class="adm-input" required
+                 value="{% if space %}{{ space.name }}{% endif %}" placeholder="Переговорная №1">
+        </div>
+
+        <div class="col-12">
+          <label class="adm-form-label">Адрес *</label>
+          <input type="text" name="address" class="adm-input" required
+                 value="{% if space %}{{ space.address }}{% endif %}" placeholder="ул. Примерная, 10, офис 202">
+        </div>
+
+        <div class="col-md-6">
+          <label class="adm-form-label">Вместимость (чел.) *</label>
+          <input type="number" name="capacity" class="adm-input" required min="1"
+                 value="{% if space %}{{ space.capacity }}{% endif %}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="adm-form-label">Цена за час (₽) *</label>
+          <input type="number" name="price_per_hour" class="adm-input" required min="0"
+                 value="{% if space %}{{ space.price_per_hour }}{% endif %}">
+        </div>
+
+        <div class="col-12">
+          <label class="adm-form-label">Описание</label>
+          <textarea name="description" class="adm-input" rows="3"
+                    placeholder="Краткое описание помещения...">{% if space %}{{ space.description }}{% endif %}</textarea>
+        </div>
+
+        <div class="col-12">
+          <label class="adm-form-label">Фото</label>
+          <input type="file" name="image" class="adm-input" accept="image/jpeg,image/png,image/webp">
+          {% if space and space.image %}
+            <div style="margin-top:8px;font-size:12px;color:#64748b;">
+              Текущее фото: <a href="{{ space.image.url }}" target="_blank">посмотреть</a>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="col-12">
+          <label class="adm-form-label">Удобства</label>
+          <div class="d-flex gap-3 flex-wrap">
+            <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;">
+              <input type="checkbox" name="has_wifi"
+                     {% if not space or space.has_wifi %}checked{% endif %}>
+              <i class="bi bi-wifi" style="color:#6366f1;"></i> Wi-Fi
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;">
+              <input type="checkbox" name="has_projector"
+                     {% if space and space.has_projector %}checked{% endif %}>
+              <i class="bi bi-projector" style="color:#64748b;"></i> Проектор
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;">
+              <input type="checkbox" name="has_board"
+                     {% if space and space.has_board %}checked{% endif %}>
+              <i class="bi bi-easel" style="color:#64748b;"></i> Доска
+            </label>
+          </div>
+        </div>
+
+        <div class="col-12 d-flex gap-2 pt-2">
+          <button type="submit" class="adm-btn adm-btn-primary">
+            <i class="bi bi-check-lg"></i> Сохранить
+          </button>
+          <a href="{% url 'admin_spaces' %}" class="adm-btn adm-btn-ghost">Отмена</a>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

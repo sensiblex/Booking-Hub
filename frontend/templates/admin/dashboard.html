@@ -5,17 +5,12 @@
 {% block nav_dashboard %}active{% endblock %}
 
 {% block admin_content %}
-
-<!-- Page header -->
 <div class="adm-page-header">
   <div>
     <h1 class="adm-page-title">Панель администратора</h1>
     <p class="adm-page-subtitle">Добро пожаловать, <strong>{{ user.username }}</strong></p>
   </div>
-  <div class="d-flex gap-2 flex-wrap">
-    <a href="/admin/" class="adm-btn adm-btn-ghost"><i class="bi bi-gear"></i> Django Admin</a>
-    <a href="/" class="adm-btn adm-btn-primary"><i class="bi bi-house"></i> На сайт</a>
-  </div>
+  <a href="/" class="adm-btn adm-btn-primary"><i class="bi bi-house"></i> На сайт</a>
 </div>
 
 <!-- Stats -->
@@ -25,7 +20,7 @@
       <i class="bi bi-people" style="color:#6366f1;"></i>
     </div>
     <div>
-      <div class="adm-stat-value">{{ users_count|default:'—' }}</div>
+      <div class="adm-stat-value">{{ users_count }}</div>
       <div class="adm-stat-label">Пользователей</div>
     </div>
   </div>
@@ -34,7 +29,7 @@
       <i class="bi bi-building" style="color:#f59e0b;"></i>
     </div>
     <div>
-      <div class="adm-stat-value">{{ spaces_count|default:'—' }}</div>
+      <div class="adm-stat-value">{{ spaces_count }}</div>
       <div class="adm-stat-label">Помещений</div>
     </div>
   </div>
@@ -43,7 +38,7 @@
       <i class="bi bi-calendar-check" style="color:#10b981;"></i>
     </div>
     <div>
-      <div class="adm-stat-value">{{ bookings_count|default:'—' }}</div>
+      <div class="adm-stat-value">{{ bookings_count }}</div>
       <div class="adm-stat-label">Бронирований</div>
     </div>
   </div>
@@ -52,7 +47,7 @@
       <i class="bi bi-credit-card" style="color:#ef4444;"></i>
     </div>
     <div>
-      <div class="adm-stat-value">{{ payments_count|default:'—' }}</div>
+      <div class="adm-stat-value">{{ payments_count }}</div>
       <div class="adm-stat-label">Платежей</div>
     </div>
   </div>
@@ -60,95 +55,88 @@
 
 <!-- Quick actions -->
 <div class="adm-card mb-4">
-  <div class="adm-card-header">
-    <span><i class="bi bi-lightning-charge"></i> Быстрые действия</span>
-  </div>
+  <div class="adm-card-header"><span><i class="bi bi-lightning-charge"></i> Быстрые действия</span></div>
   <div class="adm-card-body">
     <div class="adm-quick-actions" style="margin:0;">
       <a href="{% url 'users:admin_users' %}" class="adm-quick-action">
         <i class="bi bi-people" style="color:#6366f1;"></i> Пользователи
       </a>
-      <a href="/admin/users/customuser/add/" class="adm-quick-action">
-        <i class="bi bi-person-plus" style="color:#6366f1;"></i> Новый пользователь
+      <a href="{% url 'admin_spaces' %}" class="adm-quick-action">
+        <i class="bi bi-building" style="color:#f59e0b;"></i> Помещения
       </a>
-      <a href="/admin/spaces/space/add/" class="adm-quick-action">
+      <a href="{% url 'admin_space_create' %}" class="adm-quick-action">
         <i class="bi bi-plus-square" style="color:#f59e0b;"></i> Добавить помещение
       </a>
-      <a href="/admin/bookings/booking/" class="adm-quick-action">
+      <a href="{% url 'admin_bookings' %}" class="adm-quick-action">
         <i class="bi bi-calendar3" style="color:#10b981;"></i> Бронирования
       </a>
-      <a href="/admin/payments/payment/" class="adm-quick-action">
+      <a href="{% url 'admin_payments' %}" class="adm-quick-action">
         <i class="bi bi-receipt" style="color:#ef4444;"></i> Платежи
-      </a>
-      <a href="/admin/" class="adm-quick-action">
-        <i class="bi bi-gear" style="color:#64748b;"></i> Django Admin
       </a>
     </div>
   </div>
 </div>
 
-<!-- Modules -->
+<!-- Module cards -->
 <div class="row g-3">
-
   <div class="col-12 col-lg-6">
     <div class="adm-card">
-      <div class="adm-card-header"><span><i class="bi bi-people"></i> Пользователи</span></div>
+      <div class="adm-card-header"><span><i class="bi bi-people"></i> Пользователи</span>
+        <a href="{% url 'users:admin_users' %}" class="adm-btn adm-btn-sm adm-btn-ghost">Все →</a>
+      </div>
       <div class="adm-table-wrap">
         <table class="adm-table">
           <tbody>
-            <tr><td><i class="bi bi-list me-2 text-muted"></i><a href="{% url 'users:admin_users' %}"Список пользователей</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
-            <tr><td><i class="bi bi-person-plus me-2 text-muted"></i><a href="/admin/users/customuser/add/">Добавить пользователя</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
-            <tr><td><i class="bi bi-shield me-2 text-muted"></i><a href="/admin/users/customuser/?is_staff__exact=1">Администраторы</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
+            <tr><td><i class="bi bi-list me-2 text-muted"></i><a href="{% url 'users:admin_users' %}">Список пользователей</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
+            <tr><td><i class="bi bi-person-plus me-2 text-muted"></i><a href="{% url 'users:admin_users' %}?role=administrator">Администраторы</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
+            <tr><td><i class="bi bi-slash-circle me-2 text-muted"></i><a href="{% url 'users:admin_users' %}?is_active=0">Заблокированные</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
-
   <div class="col-12 col-lg-6">
     <div class="adm-card">
-      <div class="adm-card-header"><span><i class="bi bi-building"></i> Помещения</span></div>
+      <div class="adm-card-header"><span><i class="bi bi-building"></i> Помещения</span>
+        <a href="{% url 'admin_spaces' %}" class="adm-btn adm-btn-sm adm-btn-ghost">Все →</a>
+      </div>
       <div class="adm-table-wrap">
         <table class="adm-table">
           <tbody>
-            <tr><td><i class="bi bi-list me-2 text-muted"></i><a href="/admin/spaces/space/">Все помещения</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
-            <tr><td><i class="bi bi-plus-circle me-2 text-muted"></i><a href="/admin/spaces/space/add/">Добавить помещение</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
-            <tr><td><i class="bi bi-projector me-2 text-muted"></i><a href="/admin/spaces/space/?has_projector__exact=1">С проектором</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
+            <tr><td><i class="bi bi-list me-2 text-muted"></i><a href="{% url 'admin_spaces' %}">Все помещения</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
+            <tr><td><i class="bi bi-plus-circle me-2 text-muted"></i><a href="{% url 'admin_space_create' %}">Добавить помещение</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
-
   <div class="col-12 col-lg-6">
     <div class="adm-card">
-      <div class="adm-card-header"><span><i class="bi bi-calendar-check"></i> Бронирования</span></div>
+      <div class="adm-card-header"><span><i class="bi bi-calendar-check"></i> Бронирования</span>
+        <a href="{% url 'admin_bookings' %}" class="adm-btn adm-btn-sm adm-btn-ghost">Все →</a>
+      </div>
       <div class="adm-table-wrap">
         <table class="adm-table">
           <tbody>
-            <tr><td><i class="bi bi-list me-2 text-muted"></i><a href="/admin/bookings/booking/">Все бронирования</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
-            <tr><td><i class="bi bi-hourglass-split me-2 text-muted"></i><a href="/admin/bookings/booking/?status__exact=pending">Ожидают</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
-            <tr><td><i class="bi bi-check-circle me-2 text-muted"></i><a href="/admin/bookings/booking/?status__exact=confirmed">Подтверждённые</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
+            <tr><td><i class="bi bi-list me-2 text-muted"></i><a href="{% url 'admin_bookings' %}">Все бронирования</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
-
   <div class="col-12 col-lg-6">
     <div class="adm-card">
-      <div class="adm-card-header"><span><i class="bi bi-credit-card"></i> Платежи</span></div>
+      <div class="adm-card-header"><span><i class="bi bi-credit-card"></i> Платежи</span>
+        <a href="{% url 'admin_payments' %}" class="adm-btn adm-btn-sm adm-btn-ghost">Все →</a>
+      </div>
       <div class="adm-table-wrap">
         <table class="adm-table">
           <tbody>
-            <tr><td><i class="bi bi-list me-2 text-muted"></i><a href="/admin/payments/payment/">Все платежи</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
-            <tr><td><i class="bi bi-check-circle me-2 text-muted"></i><a href="/admin/payments/payment/?status__exact=paid">Оплаченные</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
-            <tr><td><i class="bi bi-hourglass-split me-2 text-muted"></i><a href="/admin/payments/payment/?status__exact=pending">Ожидают оплаты</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
+            <tr><td><i class="bi bi-list me-2 text-muted"></i><a href="{% url 'admin_payments' %}">Все платежи</a></td><td class="text-end"><i class="bi bi-chevron-right text-muted"></i></td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
-
 </div>
 {% endblock %}
