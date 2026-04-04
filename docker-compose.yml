@@ -1,31 +1,41 @@
+# =============================================================
+# PRODUCTION — запуск на сервере
+# docker compose up -d
+# =============================================================
 services:
+
+  db:
+    image: postgres:16-alpine
+    container_name: booking-hub-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   backend:
     build: ./backend
-    command: >-
-      sh -c "python manage.py migrate --noinput &&
-             python manage.py seed_spaces &&
-             python manage.py runserver 0.0.0.0:8000"
+    container_name: booking-hub-backend
+    restart: unless-stopped
     volumes:
-      - ./backend:/app
-      - ./frontend:/app/frontend
-      - static_volume:/static
       - media_volume:/app/media
-    env_file:
-      - .env
-    environment:
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - SECRET_KEY=${SECRET_KEY}
-      - DEBUG=${DEBUG}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-    ports:
-      - "8000:8000"
+      - static_volume:/app/static
+      - ./frontend:/app/frontend
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
 
   nginx:
     image: nginx:alpine
+    container_name: booking-hub-nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -37,5 +47,6 @@ services:
       - backend
 
 volumes:
+  postgres_data:
   static_volume:
   media_volume:
