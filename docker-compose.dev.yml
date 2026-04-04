@@ -1,31 +1,31 @@
 # =============================================================
 # DEVELOPMENT — локальная разработка
 # Запуск: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
-# Или через Makefile: make dev
+# Или: make dev
 # =============================================================
 services:
 
   db:
     ports:
-      - "5432:5432"  # открываем порт наружу для pgAdmin/DBeaver
+      - "5432:5432"
 
   backend:
-    # Переопределяем команду: runserver вместо gunicorn
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     command: >-
       sh -c "python manage.py migrate --noinput &&
              python manage.py seed_spaces &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
-      - ./backend:/app          # hot-reload: изменения кода сразу видны
+      - ./backend:/app          # hot-reload
       - ./frontend:/app/frontend
       - media_volume:/app/media
       - static_volume:/app/static
     ports:
-      - "8000:8000"              # прямой доступ к backend
+      - "8000:8000"
     environment:
       DEBUG: 'True'
 
   nginx:
-    # в dev nginx не нужен — подключается отдельно если надо:
-    # docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile nginx up
     profiles: ["nginx"]

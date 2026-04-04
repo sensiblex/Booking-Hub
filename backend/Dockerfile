@@ -5,23 +5,22 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# Системные зависимости для Pillow и psycopg2
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev gcc libjpeg-dev zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+# requirements.txt лежит в backend/ — путь относительно контекста (root)
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Копируем весь backend
+COPY backend/ .
 
-# Копируем frontend внутрь образа
-COPY ../frontend /app/frontend
+# Копируем frontend (доступен теперь так как контекст — root)
+COPY frontend/ /app/frontend/
 
-# Делаем entrypoint исполняемым
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8000
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.sh"]
