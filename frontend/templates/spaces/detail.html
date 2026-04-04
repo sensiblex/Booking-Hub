@@ -17,200 +17,174 @@
   --sp-radius:        14px;
   --sp-radius-sm:     8px;
   --sp-shadow:        0 2px 8px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --sp-transition:    180ms cubic-bezier(.16,1,.3,1);
 }
+
 .detail-page { background: var(--sp-bg); min-height: 100vh; padding: 2rem 0 4rem; }
-.back-link {
-  display: inline-flex; align-items: center; gap: .4rem;
-  color: var(--sp-muted); text-decoration: none; font-size: .875rem;
-  margin-bottom: 1.5rem; transition: color .18s;
-}
-.back-link:hover { color: var(--sp-primary); }
 
-.detail-grid {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 2rem;
-  align-items: start;
-}
-@media (max-width: 900px) { .detail-grid { grid-template-columns: 1fr; } }
-
-/* Image */
-.detail-image-wrap {
+/* Hero image */
+.space-hero {
+  width: 100%; height: 380px;
   border-radius: var(--sp-radius);
-  overflow: hidden; height: 340px;
-  background: linear-gradient(135deg, #f0fafa, #e6f2f2);
+  overflow: hidden;
+  background: linear-gradient(135deg, #f0fafa 0%, #e6f2f2 100%);
   display: flex; align-items: center; justify-content: center;
-  color: var(--sp-primary);
+  margin-bottom: 2rem;
+  flex-shrink: 0;
 }
-.detail-image-wrap img { width:100%; height:100%; object-fit:cover; }
-.detail-image-wrap .no-img-icon { font-size: 4rem; opacity: .3; }
+.space-hero img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.space-hero .no-image {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: var(--sp-primary); gap: .75rem;
+}
+.space-hero .no-image i { font-size: 4rem; opacity: .35; }
+.space-hero .no-image span { font-size: .85rem; color: var(--sp-muted); }
 
-/* Info card */
-.info-card {
+/* Layout */
+.detail-layout { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; align-items: start; }
+@media (max-width: 900px) { .detail-layout { grid-template-columns: 1fr; } }
+
+/* Left */
+.detail-title { font-size: 1.75rem; font-weight: 800; color: var(--sp-text); margin: 0 0 .35rem; }
+.detail-address {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .9rem; color: var(--sp-muted); margin-bottom: 1.5rem;
+}
+.detail-address i { color: var(--sp-primary); }
+
+.section-title { font-size: .75rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--sp-muted); margin-bottom: .75rem; }
+
+.amenity-list { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 1.75rem; }
+.amenity-badge {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .45rem .9rem; border-radius: 999px;
+  font-size: .8rem; font-weight: 600;
+  border: 1.5px solid var(--sp-border); color: var(--sp-muted); background: var(--sp-bg);
+}
+.amenity-badge.has {
+  border-color: rgba(1,105,111,.25); color: var(--sp-primary);
+  background: var(--sp-primary-light);
+}
+.amenity-badge i { font-size: .9rem; }
+
+.detail-desc { font-size: .9rem; color: var(--sp-text); line-height: 1.7; }
+
+/* Right: booking card */
+.booking-card {
   background: var(--sp-surface);
   border: 1.5px solid var(--sp-border);
   border-radius: var(--sp-radius);
   padding: 1.5rem;
   box-shadow: var(--sp-shadow);
+  position: sticky; top: 80px;
 }
-.info-card .space-title {
-  font-size: 1.5rem; font-weight: 800;
-  color: var(--sp-text); margin: 0 0 .3rem; line-height: 1.2;
+.booking-price .amount { font-size: 2rem; font-weight: 800; color: var(--sp-primary); line-height: 1; }
+.booking-price .per { font-size: .8rem; color: var(--sp-muted); margin-top: .1rem; }
+.booking-divider { border: none; border-top: 1px solid var(--sp-border); margin: 1.25rem 0; }
+.booking-meta { display: flex; flex-direction: column; gap: .6rem; margin-bottom: 1.25rem; }
+.booking-meta-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: .85rem;
 }
-.info-card .space-address {
-  font-size: .875rem; color: var(--sp-muted);
-  display: flex; align-items: center; gap: .35rem; margin-bottom: 1.25rem;
-}
-.price-block {
-  background: var(--sp-primary-light);
-  border-radius: var(--sp-radius-sm);
-  padding: 1rem 1.25rem;
-  margin-bottom: 1.25rem;
-  display: flex; align-items: flex-end; gap: .5rem;
-}
-.price-block .amount {
-  font-size: 2rem; font-weight: 900;
-  color: var(--sp-primary); line-height: 1;
-}
-.price-block .per { font-size: .875rem; color: var(--sp-muted); margin-bottom: .2rem; }
-
-.amenity-list { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1.25rem; }
-.amenity-row {
-  display: flex; align-items: center; gap: .6rem;
-  font-size: .875rem; padding: .5rem .75rem;
-  border-radius: var(--sp-radius-sm);
-  background: var(--sp-bg);
-}
-.amenity-row i { font-size: 1rem; width: 1.25rem; text-align: center; }
-.amenity-row.has { color: var(--sp-primary); }
-.amenity-row.has i { color: var(--sp-primary); }
-.amenity-row.no  { color: var(--sp-muted); text-decoration: line-through; }
-
-.book-btn {
-  width: 100%; padding: .85rem;
+.booking-meta-row .label { color: var(--sp-muted); }
+.booking-meta-row .value { font-weight: 600; color: var(--sp-text); }
+.btn-book {
+  display: block; width: 100%;
+  padding: .85rem;
   background: var(--sp-primary); color: #fff;
   border: none; border-radius: var(--sp-radius-sm);
-  font-size: 1rem; font-weight: 700;
-  display: flex; align-items: center; justify-content: center; gap: .5rem;
+  font-size: .95rem; font-weight: 700; text-align: center;
   text-decoration: none;
-  transition: background .18s, transform .18s;
+  transition: background var(--sp-transition), transform var(--sp-transition);
 }
-.book-btn:hover { background: var(--sp-primary-dark); color: #fff; transform: translateY(-1px); }
+.btn-book:hover { background: var(--sp-primary-dark); color: #fff; transform: translateY(-1px); }
 
-/* Description section */
-.desc-section {
-  background: var(--sp-surface);
-  border: 1.5px solid var(--sp-border);
-  border-radius: var(--sp-radius);
-  padding: 1.5rem;
-  margin-top: 1.5rem;
-  box-shadow: var(--sp-shadow);
+.back-link {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-size: .85rem; color: var(--sp-muted); text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: color var(--sp-transition);
 }
-.desc-section h2 {
-  font-size: 1rem; font-weight: 700;
-  color: var(--sp-text); margin-bottom: 1rem;
-}
-.stats-row {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem;
-  margin-bottom: 1rem;
-}
-.stat-box {
-  text-align: center; padding: .85rem .5rem;
-  background: var(--sp-bg); border-radius: var(--sp-radius-sm);
-  border: 1px solid var(--sp-border);
-}
-.stat-box .sv { font-size: 1.4rem; font-weight: 800; color: var(--sp-primary); line-height: 1; }
-.stat-box .sl { font-size: .7rem; color: var(--sp-muted); margin-top: .2rem; }
+.back-link:hover { color: var(--sp-primary); }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="detail-page">
-<div class="container" style="max-width:1100px;">
+<div class="container" style="max-width: 1100px;">
 
   <a href="{% url 'spaces:list' %}" class="back-link">
     <i class="bi bi-arrow-left"></i> Назад к каталогу
   </a>
 
-  <div class="detail-grid">
+  <!-- Hero -->
+  <div class="space-hero">
+    {% if space.image and space.image.name %}
+      <img src="{{ space.image.url }}" alt="{{ space.name }}" loading="lazy">
+    {% else %}
+      <div class="no-image">
+        <i class="bi bi-building"></i>
+        <span>Фото скоро появится</span>
+      </div>
+    {% endif %}
+  </div>
 
-    <!-- LEFT: image + description -->
+  <!-- Layout -->
+  <div class="detail-layout">
+
+    <!-- Left -->
     <div>
-      <div class="detail-image-wrap">
-        {% if space.image %}
-          <img src="{{ space.image.url }}" alt="{{ space.name }}" loading="lazy">
-        {% else %}
-          <i class="bi bi-building no-img-icon"></i>
-        {% endif %}
+      <h1 class="detail-title">{{ space.name }}</h1>
+      <div class="detail-address">
+        <i class="bi bi-geo-alt-fill"></i>
+        {{ space.address }}
       </div>
 
-      <div class="desc-section">
-        <h2>О помещении</h2>
-        <div class="stats-row">
-          <div class="stat-box">
-            <div class="sv">{{ space.capacity }}</div>
-            <div class="sl">Вместимость</div>
-          </div>
-          <div class="stat-box">
-            <div class="sv">{{ space.price_per_hour }} ₽</div>
-            <div class="sl">За час</div>
-          </div>
-          <div class="stat-box">
-            <div class="sv">
-              {% if space.has_wifi and space.has_projector and space.has_board %}3
-              {% elif space.has_wifi and space.has_projector %}2
-              {% elif space.has_wifi and space.has_board %}2
-              {% elif space.has_projector and space.has_board %}2
-              {% elif space.has_wifi or space.has_projector or space.has_board %}1
-              {% else %}0{% endif %}
-            </div>
-            <div class="sl">Удобств</div>
-          </div>
+      <p class="section-title">Оснащение</p>
+      <div class="amenity-list">
+        <div class="amenity-badge {% if space.has_wifi %}has{% endif %}">
+          <i class="bi bi-wifi"></i> Wi-Fi
         </div>
-        <p style="color:var(--sp-muted);font-size:.9rem;line-height:1.7;margin:0;">
-          {{ space.description|default:"Описание этого помещения скоро будет добавлено." }}
-        </p>
+        <div class="amenity-badge {% if space.has_projector %}has{% endif %}">
+          <i class="bi bi-projector"></i> Проектор
+        </div>
+        <div class="amenity-badge {% if space.has_board %}has{% endif %}">
+          <i class="bi bi-easel2"></i> Маркерная доска
+        </div>
       </div>
+
+      {% if space.description %}
+      <p class="section-title">Описание</p>
+      <p class="detail-desc">{{ space.description }}</p>
+      {% endif %}
     </div>
 
-    <!-- RIGHT: booking card -->
+    <!-- Right: Booking card -->
     <div>
-      <div class="info-card">
-        <h1 class="space-title">{{ space.name }}</h1>
-        <p class="space-address">
-          <i class="bi bi-geo-alt-fill"></i>
-          {{ space.address }}
-        </p>
-
-        <div class="price-block">
+      <div class="booking-card">
+        <div class="booking-price">
           <div class="amount">{{ space.price_per_hour }} ₽</div>
-          <div class="per">/ час</div>
+          <div class="per">за час</div>
         </div>
-
-        <div class="amenity-list">
-          <div class="amenity-row {% if space.has_wifi %}has{% else %}no{% endif %}">
-            <i class="bi bi-wifi"></i>
-            <span>Wi-Fi</span>
-            {% if not space.has_wifi %}<span class="ms-auto" style="font-size:.7rem;text-decoration:none;color:var(--sp-muted);">недоступно</span>{% endif %}
+        <hr class="booking-divider">
+        <div class="booking-meta">
+          <div class="booking-meta-row">
+            <span class="label"><i class="bi bi-people me-1"></i>Вместимость</span>
+            <span class="value">до {{ space.capacity }} чел.</span>
           </div>
-          <div class="amenity-row {% if space.has_projector %}has{% else %}no{% endif %}">
-            <i class="bi bi-projector"></i>
-            <span>Проектор</span>
-            {% if not space.has_projector %}<span class="ms-auto" style="font-size:.7rem;text-decoration:none;color:var(--sp-muted);">недоступно</span>{% endif %}
+          {% if space.has_wifi %}
+          <div class="booking-meta-row">
+            <span class="label"><i class="bi bi-wifi me-1"></i>Wi-Fi</span>
+            <span class="value" style="color: var(--sp-primary)">Есть</span>
           </div>
-          <div class="amenity-row {% if space.has_board %}has{% else %}no{% endif %}">
-            <i class="bi bi-easel2"></i>
-            <span>Маркерная доска</span>
-            {% if not space.has_board %}<span class="ms-auto" style="font-size:.7rem;text-decoration:none;color:var(--sp-muted);">недоступно</span>{% endif %}
-          </div>
+          {% endif %}
         </div>
-
-        <a href="#" class="book-btn">
-          <i class="bi bi-calendar-check"></i>
-          Забронировать
+        <a href="#" class="btn-book">
+          <i class="bi bi-calendar-check me-1"></i> Забронировать
         </a>
-
-        <p style="text-align:center;font-size:.72rem;color:var(--sp-muted);margin:.75rem 0 0;">Бронирование без предоплаты</p>
       </div>
     </div>
 
