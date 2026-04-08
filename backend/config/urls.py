@@ -24,7 +24,12 @@ urlpatterns = [
     path('admin-panel/bookings/',                         admin_bookings,       name='admin_bookings'),
     path('admin-panel/bookings/<int:booking_id>/status/', admin_booking_status, name='admin_booking_status'),
     path('admin-panel/payments/',                         admin_payments,       name='admin_payments'),
+    
 
+    
+    #Бронирование
+    path('bookings/', include('apps.bookings.urls')),
+    
     # Apps
     path('users/',  include('apps.users.urls')),
     path('spaces/', include('apps.spaces.urls')),

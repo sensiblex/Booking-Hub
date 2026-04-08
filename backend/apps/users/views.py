@@ -21,7 +21,7 @@ def register(request):
             user.save()
             login(request, user)
             messages.success(request, 'Регистрация прошла успешно!')
-            return redirect('users:profile')
+            return redirect('/users/profile/')
     else:
         form = CustomUserCreationForm()
     return render(request, 'auth/register.html', {'form': form})
@@ -34,7 +34,7 @@ def login_view(request):
             user = form.get_user()
             login(request, user)
             messages.success(request, f'Добро пожаловать, {user.get_role_display()}!')
-            return redirect('users:profile')
+            return redirect('/users/profile/')
     else:
         form = AuthenticationForm()
     return render(request, 'auth/login.html', {'form': form})
@@ -43,7 +43,7 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     messages.info(request, 'Вы вышли из системы.')
-    return redirect('users:login')
+    return redirect('/users/login/')
 
 
 def profile(request):

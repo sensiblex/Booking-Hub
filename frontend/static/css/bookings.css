@@ -1,0 +1,89 @@
+/* frontend/static/css/bookings.css */
+
+.booking-page {
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding: 40px 0;
+}
+
+.booking-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+.booking-header {
+    background: linear-gradient(135deg, #01696f, #0c4e54);
+    color: white;
+    padding: 2rem 2.5rem;
+}
+
+.booking-header h4 {
+    margin: 0 0 8px 0;
+    font-weight: 700;
+}
+
+.booking-body {
+    padding: 2.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.flatpickr-input {
+    height: 54px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 0 16px;
+    font-size: 1rem;
+}
+
+.flatpickr-input:focus {
+    border-color: #01696f;
+    box-shadow: 0 0 0 4px rgba(1, 105, 111, 0.15);
+    outline: none;
+}
+
+.price-summary {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+#total-price {
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: #01696f;
+    line-height: 1;
+}
+
+#duration-info {
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+.btn-booking {
+    height: 58px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 12px;
+    margin-top: 10px;
+}
+
+.back-link {
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.back-link:hover {
+    color: #01696f;
+}
