@@ -1,50 +1,40 @@
 {% extends 'base.html' %}
-{% block title %}Вход в систему{% endblock %}
+{% load static %}
+
+{% block title %}Вход — Booking-Hub{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-5">
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h2 class="text-center mb-4">Вход в систему</h2>
-                
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h4 class="card-title text-center mb-4">Вход в аккаунт</h4>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">Имя пользователя</label>
+                            <input type="text" name="username" id="id_username" class="form-control" required>
                         </div>
-                    {% endfor %}
-                {% endif %}
-                
-                {% if form.errors %}
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        Неправильное имя пользователя или пароль.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endif %}
-                
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label for="id_username" class="form-label">Имя пользователя</label>
-                        <input type="text" name="username" id="id_username" class="form-control" required autofocus>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="id_password" class="form-label">Пароль</label>
-                        <input type="password" name="password" id="id_password" class="form-control" required>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100 py-2">Войти</button>
-                </form>
-                
-                <hr class="my-4">
-                
-                <p class="text-center mb-0">
-                    Нет аккаунта? <a href="{% url 'users:register' %}">Зарегистрироваться</a>
-                </p>
+
+                        <div class="mb-3">
+                            <label for="id_password" class="form-label">Пароль</label>
+                            <input type="password" name="password" id="id_password" class="form-control" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2">Войти</button>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <p class="text-center mb-0">
+                        Нет аккаунта? 
+                        <!-- Используем жёсткую ссылку, чтобы избежать ошибки reverse -->
+                        <a href="/users/register/">Зарегистрироваться</a>
+                    </p>
+                </div>
             </div>
         </div>
     </div>

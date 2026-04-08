@@ -1,19 +1,70 @@
 {% extends 'base.html' %}
-{% block title %}История бронирований{% endblock %}
+{% load static %}
+
+{% block title %}Мои бронирования — Booking-Hub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/bookings.css' %}">
+{% endblock %}
 
 {% block content %}
-<h2>Мои бронирования</h2>
-<table class="table table-hover align-middle">
-    <thead><tr><th>Помещение</th><th>Дата</th><th>Статус</th><th>Сумма</th></tr></thead>
-    <tbody>
-        {% for booking in bookings %}
-        <tr>
-            <td>{{ booking.space.name }}</td>
-            <td>{{ booking.start_time|date:"d.m.Y H:i" }}</td>
-            <td><span class="badge bg-{{ booking.status|slice:":7" }}">{{ booking.get_status_display }}</span></td>
-            <td>{{ booking.total_price }} ₽</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="container py-5">
+    <h2 class="mb-4">Мои бронирования</h2>
+
+    {% if bookings %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Помещение</th>
+                    <th>Дата и время</th>
+                    <th>Статус</th>
+                    <th>Сумма</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>
+                        <strong>{{ booking.space.name }}</strong><br>
+                        <small class="text-muted">{{ booking.space.address }}</small>
+                    </td>
+                    <td>
+                        {{ booking.start_time|date:"d.m.Y" }}<br>
+                        <span class="text-muted">{{ booking.start_time|time:"H:i" }} — {{ booking.end_time|time:"H:i" }}</span>
+                    </td>
+                    <td>
+                        {% if booking.status == 'confirmed' %}
+                            <span class="badge bg-success">Подтверждено</span>
+                        {% elif booking.status == 'pending' %}
+                            <span class="badge bg-warning">Ожидает</span>
+                        {% elif booking.status == 'cancelled' %}
+                            <span class="badge bg-danger">Отменено</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ booking.total_price }} ₽</strong></td>
+                    <td>
+                        {% if booking.status == 'pending' or booking.status == 'confirmed' %}
+                            <form method="post" action="{% url 'bookings:cancel' booking.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Отменить бронь?')">
+                                    Отменить
+                                </button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center py-5">
+        <h5>У вас пока нет бронирований</h5>
+        <a href="{% url 'spaces:list' %}" class="btn btn-primary mt-3">Найти помещение</a>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

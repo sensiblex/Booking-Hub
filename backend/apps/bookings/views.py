@@ -1,43 +1,33 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from .models import User
+from apps.spaces.models import Space
 
-class CustomUserCreationForm(UserCreationForm):
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password1', 'password2']
 
-def register(request):
+#====================================================================================
+#                       Затычки (Пусть Амирчик бэк доделывает)
+#====================================================================================
+def booking_create(request, space_id):
+    space = get_object_or_404(Space, id=space_id)
+    
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            user.role = 'client'          # по ТЗ новый пользователь = Клиент
-            user.save()
-            login(request, user)
-            messages.success(request, 'Регистрация прошла успешно!')
-            return redirect('users:profile')   # или 'spaces:list' — Максим потом подправит
-    else:
-        form = CustomUserCreationForm()
-    return render(request, 'auth/register.html', {'form': form})
+        messages.success(request, "Бронирование успешно создано! (тестовый режим)")
+        return redirect('bookings:history')
+    
+    return render(request, 'bookings/create.html', {'space': space})
 
 
-def login_view(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            messages.success(request, f'Добро пожаловать, {user.get_role_display()}!')
-            return redirect('users:profile')
-    else:
-        form = AuthenticationForm()
-    return render(request, 'auth/login.html', {'form': form})
+def booking_history(request):
+    # Пока показываем пустой список или тестовые данные
+    bookings = []  # можно позже заменить на реальные
+    return render(request, 'bookings/history.html', {'bookings': bookings})
 
 
-def logout_view(request):
-    logout(request)
-    messages.info(request, 'Вы вышли из системы.')
-    return redirect('users:login')
+def manager_bookings(request):
+    # Проверка доступа временно отключена
+    bookings = []  
+    return render(request, 'manager/bookings.html', {'bookings': bookings})
+
+
+def cancel_booking(request, booking_id):
+    messages.info(request, f"Бронирование #{booking_id} отменено (тестовый режим)")
+    return redirect('bookings:history')

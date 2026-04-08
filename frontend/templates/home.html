@@ -24,7 +24,7 @@
                         Найти помещение
                     </a>
                     {% if not user.is_authenticated %}
-                    <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg px-5">
+                    <a href="/users/register/" class="btn btn-outline-light btn-lg px-5">
                         Зарегистрироваться
                     </a>
                     {% endif %}

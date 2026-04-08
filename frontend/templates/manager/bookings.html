@@ -1,8 +1,67 @@
 {% extends 'base.html' %}
-{% block title %}Панель менеджера — все брони{% endblock %}
+{% load static %}
+
+{% block title %}Панель менеджера — Все бронирования{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/bookings.css' %}">
+{% endblock %}
 
 {% block content %}
-<h2>Все бронирования</h2>
-<!-- Таблица со статусами + кнопки подтверждения/отмены -->
-<table class="table">...</table>
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Все бронирования</h2>
+        <span class="badge bg-primary fs-6">{{ bookings|length }} шт.</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Пользователь</th>
+                    <th>Помещение</th>
+                    <th>Дата / Время</th>
+                    <th>Статус</th>
+                    <th>Сумма</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td><strong>#{{ booking.id }}</strong></td>
+                    <td>{{ booking.user.get_full_name|default:booking.user.username }}</td>
+                    <td>{{ booking.space.name }}</td>
+                    <td>
+                        {{ booking.start_time|date:"d.m.Y" }}<br>
+                        <small>{{ booking.start_time|time:"H:i" }} — {{ booking.end_time|time:"H:i" }}</small>
+                    </td>
+                    <td>
+                        {% if booking.status == 'confirmed' %}
+                            <span class="badge bg-success">Подтверждено</span>
+                        {% elif booking.status == 'pending' %}
+                            <span class="badge bg-warning">Ожидает подтверждения</span>
+                        {% elif booking.status == 'cancelled' %}
+                            <span class="badge bg-danger">Отменено</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ booking.total_price }} ₽</strong></td>
+                    <td>
+                        <select class="form-select form-select-sm" onchange="updateStatus(this, {{ booking.id }})" style="width: auto;">
+                            <option value="pending" {% if booking.status == 'pending' %}selected{% endif %}>Ожидает</option>
+                            <option value="confirmed" {% if booking.status == 'confirmed' %}selected{% endif %}>Подтвердить</option>
+                            <option value="cancelled" {% if booking.status == 'cancelled' %}selected{% endif %}>Отменить</option>
+                        </select>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5">Бронирований пока нет</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}
