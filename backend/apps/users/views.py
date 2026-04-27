@@ -1,3 +1,4 @@
+from django import forms
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
@@ -11,6 +12,50 @@ class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2']
+
+
+class AdminUserCreationForm(UserCreationForm):
+    class Meta:
+        model = User
+        fields = [
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'role',
+            'is_active',
+            'is_staff',
+            'password1',
+            'password2',
+        ]
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'adm-input', 'placeholder': 'username'}),
+            'email': forms.EmailInput(attrs={'class': 'adm-input', 'placeholder': 'user@example.com'}),
+            'first_name': forms.TextInput(attrs={'class': 'adm-input', 'placeholder': 'Имя'}),
+            'last_name': forms.TextInput(attrs={'class': 'adm-input', 'placeholder': 'Фамилия'}),
+            'role': forms.Select(attrs={'class': 'adm-input'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_staff': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['password1'].widget.attrs.update({
+            'class': 'adm-input',
+            'placeholder': 'Пароль',
+        })
+        self.fields['password2'].widget.attrs.update({
+            'class': 'adm-input',
+            'placeholder': 'Повторите пароль',
+        })
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if user.role == 'administrator':
+            user.is_staff = True
+        if commit:
+            user.save()
+        return user
 
 
 class UsernameOrEmailAuthenticationForm(AuthenticationForm):
@@ -115,6 +160,26 @@ def admin_users(request):
     return render(request, 'admin/users.html', {
         'users': qs,
         'role_choices': User.ROLE_CHOICES,
+    })
+
+
+@login_required
+def admin_user_create(request):
+    if request.user.role != 'administrator' and not request.user.is_superuser:
+        messages.error(request, 'Доступ запрещён.')
+        return redirect('users:profile')
+
+    form = AdminUserCreationForm(request.POST or None)
+    if request.method == 'POST':
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, f'Пользователь {user.username} создан.')
+            return redirect('users:admin_users')
+        messages.error(request, 'Проверьте данные формы.')
+
+    return render(request, 'admin/user_form.html', {
+        'form': form,
+        'action': 'Добавить пользователя',
     })
 
 

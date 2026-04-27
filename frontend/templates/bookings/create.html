@@ -24,6 +24,8 @@
             <div class="booking-body">
                 <form method="post" id="booking-form" data-booking-calendar data-price-per-hour="{{ space.price_per_hour }}">
                     {% csrf_token %}
+                    <input type="hidden" id="booking-availability-url" value="{% url 'bookings:check_availability' %}">
+                    <input type="hidden" id="booking-space-id" value="{{ space.id }}">
 
                     <div class="row g-4">
                         <div class="col-12 col-md-6">
@@ -54,6 +56,7 @@
                             <span id="total-price" class="fs-1">0 ₽</span>
                         </div>
                         <div id="duration-info" class="text-muted mt-1"></div>
+                        <div id="availability-info" class="mt-2 small" aria-live="polite"></div>
                     </div>
 
                     <div class="d-grid gap-3">
@@ -75,4 +78,5 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
 <script src="{% static 'js/calendar.js' %}"></script>
+<script src="{% static 'js/booking.js' %}"></script>
 {% endblock %}

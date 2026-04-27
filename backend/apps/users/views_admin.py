@@ -2,7 +2,9 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import get_user_model
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Count, Q
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 
 try:
     from apps.spaces.models import Space
@@ -100,24 +102,51 @@ def admin_space_delete(request, space_id):
 
 @staff_member_required(login_url='/users/login/')
 def admin_bookings(request):
+    booking_stats = {
+        'total': 0,
+        'pending': 0,
+        'confirmed': 0,
+        'cancelled': 0,
+    }
+
     if Booking is None:
         bookings = []
         status_choices = []
     else:
         status = request.GET.get('status', '').strip()
         q      = request.GET.get('q', '').strip()
+        date_from = request.GET.get('date_from', '').strip()
+        date_to = request.GET.get('date_to', '').strip()
+
         bookings = Booking.objects.select_related('user', 'space').order_by('-created_at') \
             if hasattr(Booking, 'objects') else []
+
+        status_counts = Booking.objects.values('status').annotate(total=Count('id'))
+        booking_stats.update({
+            row['status']: row['total']
+            for row in status_counts
+        })
+        booking_stats['total'] = Booking.objects.count()
+
         if status:
             bookings = bookings.filter(status=status)
         if q:
             bookings = bookings.filter(
-                Q(user__username__icontains=q) | Q(space__name__icontains=q)
+                Q(user__username__icontains=q) |
+                Q(user__email__icontains=q) |
+                Q(space__name__icontains=q)
             )
+        if date_from:
+            bookings = bookings.filter(start_time__date__gte=date_from)
+        if date_to:
+            bookings = bookings.filter(start_time__date__lte=date_to)
+
         status_choices = Booking.STATUS_CHOICES if hasattr(Booking, 'STATUS_CHOICES') else []
+
     return render(request, 'admin/bookings.html', {
         'bookings': bookings,
         'status_choices': status_choices,
+        'booking_stats': booking_stats,
     })
 
 
@@ -126,14 +155,22 @@ def admin_booking_status(request, booking_id):
     """Быстрое изменение статуса брони."""
     if Booking is None:
         return redirect('admin_bookings')
+
     booking = get_object_or_404(Booking, pk=booking_id)
     if request.method == 'POST':
         new_status = request.POST.get('status')
-        if new_status:
+        valid_statuses = [value for value, _label in Booking.STATUS_CHOICES]
+        if new_status in valid_statuses:
             booking.status = new_status
-            booking.save()
+            booking.save(update_fields=['status', 'updated_at'])
             messages.success(request, 'Статус обновлён.')
-    return redirect('admin_bookings')
+        else:
+            messages.error(request, 'Некорректный статус бронирования.')
+
+    next_url = request.POST.get('next') or reverse('admin_bookings')
+    if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        next_url = reverse('admin_bookings')
+    return redirect(next_url)
 
 
 # ---- Payments ----

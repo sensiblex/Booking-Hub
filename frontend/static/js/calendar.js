@@ -42,10 +42,31 @@
     let startPicker;
     let endPicker;
 
+    function availabilityAllowsSubmit() {
+      return !['checking', 'unavailable'].includes(form.dataset.availabilityState);
+    }
+
+    function notifyIntervalChange(isValid) {
+      form.dataset.bookingIntervalValid = isValid ? 'true' : 'false';
+
+      if (form.dataset.bookingSubmitting === 'true') {
+        return;
+      }
+
+      form.dispatchEvent(new CustomEvent('booking:interval-change', {
+        detail: {
+          isValid,
+          startTime: startInput.value,
+          endTime: endInput.value,
+        },
+      }));
+    }
+
     function resetSummary(message) {
       totalPrice.textContent = '0 ₽';
       durationInfo.textContent = message || '';
       submitButton.disabled = true;
+      notifyIntervalChange(false);
     }
 
     function calculateTotal() {
@@ -70,7 +91,8 @@
       const total = diffHours * pricePerHour;
       totalPrice.textContent = formatMoney(total);
       durationInfo.textContent = `Длительность: ${diffHours.toFixed(1)} ч.`;
-      submitButton.disabled = false;
+      submitButton.disabled = !availabilityAllowsSubmit();
+      notifyIntervalChange(true);
     }
 
     startPicker = window.flatpickr(startInput, {
@@ -111,7 +133,10 @@
     });
 
     form.addEventListener('submit', (event) => {
+      form.dataset.bookingSubmitting = 'true';
       calculateTotal();
+      delete form.dataset.bookingSubmitting;
+
       if (submitButton.disabled) {
         event.preventDefault();
         if (!startPicker.selectedDates[0]) {

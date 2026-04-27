@@ -1,0 +1,105 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}{{ action }} — Booking-Hub Admin{% endblock %}
+{% block nav_users %}active{% endblock %}
+
+{% block admin_content %}
+
+<div class="adm-page-header">
+  <div>
+    <h1 class="adm-page-title"><i class="bi bi-person-plus me-2" style="color:#6366f1;"></i>{{ action }}</h1>
+    <p class="adm-page-subtitle">Создание аккаунта, назначение роли и прав доступа.</p>
+  </div>
+  <a href="{% url 'users:admin_users' %}" class="adm-btn adm-btn-ghost">
+    <i class="bi bi-arrow-left"></i> Назад
+  </a>
+</div>
+
+<form method="post" class="adm-card" novalidate>
+  {% csrf_token %}
+
+  <div class="adm-card-header">
+    <span><i class="bi bi-person-lines-fill"></i> Данные пользователя</span>
+  </div>
+
+  <div class="adm-card-body">
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger" role="alert">
+        {% for error in form.non_field_errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="adm-form-label" for="{{ form.username.id_for_label }}">Имя пользователя</label>
+        {{ form.username }}
+        {% include 'admin/partials/form_field_errors.html' with field=form.username %}
+      </div>
+
+      <div class="col-md-6">
+        <label class="adm-form-label" for="{{ form.email.id_for_label }}">Email</label>
+        {{ form.email }}
+        {% include 'admin/partials/form_field_errors.html' with field=form.email %}
+      </div>
+
+      <div class="col-md-6">
+        <label class="adm-form-label" for="{{ form.first_name.id_for_label }}">Имя</label>
+        {{ form.first_name }}
+        {% include 'admin/partials/form_field_errors.html' with field=form.first_name %}
+      </div>
+
+      <div class="col-md-6">
+        <label class="adm-form-label" for="{{ form.last_name.id_for_label }}">Фамилия</label>
+        {{ form.last_name }}
+        {% include 'admin/partials/form_field_errors.html' with field=form.last_name %}
+      </div>
+
+      <div class="col-md-6">
+        <label class="adm-form-label" for="{{ form.role.id_for_label }}">Роль</label>
+        {{ form.role }}
+        {% include 'admin/partials/form_field_errors.html' with field=form.role %}
+      </div>
+
+      <div class="col-md-6">
+        <label class="adm-form-label">Доступ</label>
+        <div class="d-flex flex-column gap-2" style="padding-top:4px;">
+          <label class="form-check d-flex align-items-center gap-2 mb-0">
+            {{ form.is_active }}
+            <span>Активен</span>
+          </label>
+          <label class="form-check d-flex align-items-center gap-2 mb-0">
+            {{ form.is_staff }}
+            <span>Доступ к админке Django</span>
+          </label>
+        </div>
+        {% include 'admin/partials/form_field_errors.html' with field=form.is_active %}
+        {% include 'admin/partials/form_field_errors.html' with field=form.is_staff %}
+      </div>
+
+      <div class="col-md-6">
+        <label class="adm-form-label" for="{{ form.password1.id_for_label }}">Пароль</label>
+        {{ form.password1 }}
+        {% include 'admin/partials/form_field_errors.html' with field=form.password1 %}
+        <div class="text-muted small mt-1">Используется стандартная проверка сложности Django.</div>
+      </div>
+
+      <div class="col-md-6">
+        <label class="adm-form-label" for="{{ form.password2.id_for_label }}">Подтверждение пароля</label>
+        {{ form.password2 }}
+        {% include 'admin/partials/form_field_errors.html' with field=form.password2 %}
+      </div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #e2e8f0;padding:16px 20px;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;background:#fafbff;">
+    <a href="{% url 'users:admin_users' %}" class="adm-btn adm-btn-ghost">Отмена</a>
+    <button type="submit" class="adm-btn adm-btn-primary">
+      <i class="bi bi-check-lg"></i> Создать пользователя
+    </button>
+  </div>
+</form>
+
+{% endblock %}

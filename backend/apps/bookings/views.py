@@ -1,12 +1,18 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.spaces.models import Space
 
 from .models import Booking
-from .services import create_booking, parse_booking_datetime
+from .services import (
+    calculate_total_price,
+    check_availability,
+    create_booking,
+    parse_booking_datetime,
+)
 
 
 def _can_manage_bookings(user):
@@ -38,6 +44,31 @@ def booking_create(request, space_id):
             return redirect('payments:pay_for_booking', booking_id=booking.id)
 
     return render(request, 'bookings/create.html', {'space': space})
+
+
+@login_required(login_url='/users/login/')
+def check_booking_availability(request):
+    try:
+        space = get_object_or_404(Space, id=request.GET.get('space_id'))
+        start_time = parse_booking_datetime(request.GET.get('start_time'))
+        end_time = parse_booking_datetime(request.GET.get('end_time'))
+        check_availability(space, start_time, end_time)
+    except ValidationError as exc:
+        return JsonResponse({
+            'available': False,
+            'message': ' '.join(exc.messages),
+        }, status=400)
+    except Http404:
+        return JsonResponse({
+            'available': False,
+            'message': 'Помещение не найдено.',
+        }, status=404)
+
+    return JsonResponse({
+        'available': True,
+        'message': 'Слот свободен.',
+        'total_price': calculate_total_price(space, start_time, end_time),
+    })
 
 
 @login_required(login_url='/users/login/')
