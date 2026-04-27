@@ -1,33 +1,140 @@
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+from django.http import Http404, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+
 from apps.spaces.models import Space
 
+from .models import Booking
+from .services import (
+    calculate_total_price,
+    check_availability,
+    create_booking,
+    parse_booking_datetime,
+)
 
-#====================================================================================
-#                       Затычки (Пусть Амирчик бэк доделывает)
-#====================================================================================
+
+def _can_manage_bookings(user):
+    return (
+        user.is_staff
+        or getattr(user, 'role', None) in ('manager', 'administrator')
+    )
+
+
+@login_required(login_url='/users/login/')
 def booking_create(request, space_id):
     space = get_object_or_404(Space, id=space_id)
-    
+
     if request.method == 'POST':
-        messages.success(request, "Бронирование успешно создано! (тестовый режим)")
-        return redirect('bookings:history')
-    
+        try:
+            start_time = parse_booking_datetime(request.POST.get('start_time'))
+            end_time = parse_booking_datetime(request.POST.get('end_time'))
+            booking = create_booking(
+                user=request.user,
+                space=space,
+                start_time=start_time,
+                end_time=end_time,
+                comment=request.POST.get('comment', '').strip(),
+            )
+        except ValidationError as exc:
+            messages.error(request, ' '.join(exc.messages))
+        else:
+            messages.success(request, 'Бронирование создано. Перейдите к оплате.')
+            return redirect('payments:pay_for_booking', booking_id=booking.id)
+
     return render(request, 'bookings/create.html', {'space': space})
 
 
+@login_required(login_url='/users/login/')
+def check_booking_availability(request):
+    try:
+        space = get_object_or_404(Space, id=request.GET.get('space_id'))
+        start_time = parse_booking_datetime(request.GET.get('start_time'))
+        end_time = parse_booking_datetime(request.GET.get('end_time'))
+        check_availability(space, start_time, end_time)
+    except ValidationError as exc:
+        return JsonResponse({
+            'available': False,
+            'message': ' '.join(exc.messages),
+        }, status=400)
+    except Http404:
+        return JsonResponse({
+            'available': False,
+            'message': 'Помещение не найдено.',
+        }, status=404)
+
+    return JsonResponse({
+        'available': True,
+        'message': 'Слот свободен.',
+        'total_price': calculate_total_price(space, start_time, end_time),
+    })
+
+
+@login_required(login_url='/users/login/')
 def booking_history(request):
-    # Пока показываем пустой список или тестовые данные
-    bookings = []  # можно позже заменить на реальные
+    bookings = (
+        Booking.objects
+        .select_related('space')
+        .filter(user=request.user)
+        .order_by('-start_time')
+    )
     return render(request, 'bookings/history.html', {'bookings': bookings})
 
 
+@login_required(login_url='/users/login/')
 def manager_bookings(request):
-    # Проверка доступа временно отключена
-    bookings = []  
-    return render(request, 'manager/bookings.html', {'bookings': bookings})
+    if not _can_manage_bookings(request.user):
+        messages.error(request, 'Доступ запрещён.')
+        return redirect('bookings:history')
+
+    bookings = (
+        Booking.objects
+        .select_related('user', 'space')
+        .order_by('-start_time')
+    )
+    return render(request, 'manager/bookings.html', {
+        'bookings': bookings,
+        'status_choices': Booking.STATUS_CHOICES,
+    })
 
 
+@login_required(login_url='/users/login/')
 def cancel_booking(request, booking_id):
-    messages.info(request, f"Бронирование #{booking_id} отменено (тестовый режим)")
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    if booking.user != request.user and not _can_manage_bookings(request.user):
+        messages.error(request, 'Доступ запрещён.')
+        return redirect('bookings:history')
+
+    if request.method == 'POST':
+        if booking.status == Booking.STATUS_CANCELLED:
+            messages.info(request, 'Бронирование уже отменено.')
+        else:
+            booking.status = Booking.STATUS_CANCELLED
+            booking.save(update_fields=['status', 'updated_at'])
+            messages.success(request, 'Бронирование отменено.')
+
+    if _can_manage_bookings(request.user) and booking.user != request.user:
+        return redirect('bookings:manager_bookings')
     return redirect('bookings:history')
+
+
+@login_required(login_url='/users/login/')
+def update_booking_status(request, booking_id):
+    if not _can_manage_bookings(request.user):
+        messages.error(request, 'Доступ запрещён.')
+        return redirect('bookings:history')
+
+    booking = get_object_or_404(Booking, id=booking_id)
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        valid_statuses = [status for status, _label in Booking.STATUS_CHOICES]
+        if new_status in valid_statuses:
+            booking.status = new_status
+            booking.save(update_fields=['status', 'updated_at'])
+            messages.success(request, 'Статус бронирования обновлён.')
+        else:
+            messages.error(request, 'Некорректный статус бронирования.')
+
+    return redirect('bookings:manager_bookings')

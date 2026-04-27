@@ -48,11 +48,15 @@
                     </td>
                     <td><strong>{{ booking.total_price }} ₽</strong></td>
                     <td>
-                        <select class="form-select form-select-sm" onchange="updateStatus(this, {{ booking.id }})" style="width: auto;">
-                            <option value="pending" {% if booking.status == 'pending' %}selected{% endif %}>Ожидает</option>
-                            <option value="confirmed" {% if booking.status == 'confirmed' %}selected{% endif %}>Подтвердить</option>
-                            <option value="cancelled" {% if booking.status == 'cancelled' %}selected{% endif %}>Отменить</option>
-                        </select>
+                        <form method="post" action="{% url 'bookings:update_status' booking.id %}" class="d-flex gap-2">
+                            {% csrf_token %}
+                            <select name="status" class="form-select form-select-sm" style="width: auto;">
+                                {% for value, label in status_choices %}
+                                    <option value="{{ value }}" {% if booking.status == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Сохранить</button>
+                        </form>
                     </td>
                 </tr>
                 {% empty %}

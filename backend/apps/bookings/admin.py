@@ -1,3 +1,23 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import Booking
+
+
+@admin.register(Booking)
+class BookingAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'user',
+        'space',
+        'start_time',
+        'end_time',
+        'status',
+        'total_price',
+        'created_at',
+    )
+    list_filter = ('status', 'space', 'created_at')
+    search_fields = ('user__username', 'user__email', 'space__name')
+    list_editable = ('status',)
+    readonly_fields = ('created_at', 'updated_at')
+    date_hierarchy = 'start_time'
+    ordering = ('-start_time',)

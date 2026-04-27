@@ -22,8 +22,10 @@
 
             <!-- Основная форма -->
             <div class="booking-body">
-                <form method="post" id="booking-form">
+                <form method="post" id="booking-form" data-booking-calendar data-price-per-hour="{{ space.price_per_hour }}">
                     {% csrf_token %}
+                    <input type="hidden" id="booking-availability-url" value="{% url 'bookings:check_availability' %}">
+                    <input type="hidden" id="booking-space-id" value="{{ space.id }}">
 
                     <div class="row g-4">
                         <div class="col-12 col-md-6">
@@ -54,6 +56,7 @@
                             <span id="total-price" class="fs-1">0 ₽</span>
                         </div>
                         <div id="duration-info" class="text-muted mt-1"></div>
+                        <div id="availability-info" class="mt-2 small" aria-live="polite"></div>
                     </div>
 
                     <div class="d-grid gap-3">
@@ -74,49 +77,6 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const pricePerHour = {{ space.price_per_hour }};
-
-    const startPicker = flatpickr("#datetime_start", {
-        enableTime: true,
-        dateFormat: "Y-m-d H:i",
-        locale: "ru",
-        minDate: "today",
-        time_24hr: true
-    });
-
-    const endPicker = flatpickr("#datetime_end", {
-        enableTime: true,
-        dateFormat: "Y-m-d H:i",
-        locale: "ru",
-        minDate: "today",
-        time_24hr: true
-    });
-
-    function calculateTotal() {
-        const start = startPicker.selectedDates[0];
-        const end = endPicker.selectedDates[0];
-        const btn = document.getElementById('submit-btn');
-
-        if (start && end && end > start) {
-            const diffHours = (end - start) / (1000 * 60 * 60);
-            const total = Math.ceil(diffHours * pricePerHour);
-
-            document.getElementById('total-price').textContent = total + ' ₽';
-            document.getElementById('duration-info').textContent = 
-                `Длительность ≈ ${diffHours.toFixed(1)} часов`;
-            btn.disabled = false;
-        } else {
-            document.getElementById('total-price').textContent = '0 ₽';
-            document.getElementById('duration-info').textContent = '';
-            btn.disabled = true;
-        }
-    }
-
-    startPicker.config.onChange.push(calculateTotal);
-    endPicker.config.onChange.push(calculateTotal);
-});
-</script>
+<script src="{% static 'js/calendar.js' %}"></script>
+<script src="{% static 'js/booking.js' %}"></script>
 {% endblock %}

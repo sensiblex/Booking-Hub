@@ -13,6 +13,37 @@
   </div>
 </div>
 
+<div class="adm-stats">
+  <div class="adm-stat">
+    <div class="adm-stat-icon" style="background:rgba(99,102,241,0.10);color:#4f46e5;"><i class="bi bi-calendar-week"></i></div>
+    <div>
+      <div class="adm-stat-value">{{ booking_stats.total }}</div>
+      <div class="adm-stat-label">Всего броней</div>
+    </div>
+  </div>
+  <div class="adm-stat">
+    <div class="adm-stat-icon" style="background:rgba(245,158,11,0.12);color:#d97706;"><i class="bi bi-hourglass-split"></i></div>
+    <div>
+      <div class="adm-stat-value">{{ booking_stats.pending }}</div>
+      <div class="adm-stat-label">Ожидают</div>
+    </div>
+  </div>
+  <div class="adm-stat">
+    <div class="adm-stat-icon" style="background:rgba(16,185,129,0.12);color:#059669;"><i class="bi bi-check-circle"></i></div>
+    <div>
+      <div class="adm-stat-value">{{ booking_stats.confirmed }}</div>
+      <div class="adm-stat-label">Подтверждены</div>
+    </div>
+  </div>
+  <div class="adm-stat">
+    <div class="adm-stat-icon" style="background:rgba(239,68,68,0.10);color:#dc2626;"><i class="bi bi-x-circle"></i></div>
+    <div>
+      <div class="adm-stat-value">{{ booking_stats.cancelled }}</div>
+      <div class="adm-stat-label">Отменены</div>
+    </div>
+  </div>
+</div>
+
 {% if status_choices %}
 <div class="adm-card mb-4">
   <div class="adm-card-header"><span><i class="bi bi-funnel"></i> Фильтры</span></div>
@@ -22,7 +53,7 @@
         <label class="adm-form-label">Поиск</label>
         <input type="text" name="q" value="{{ request.GET.q }}" class="adm-input" placeholder="Пользователь, помещение...">
       </div>
-      <div class="col-md-3">
+      <div class="col-md-2">
         <label class="adm-form-label">Статус</label>
         <select name="status" class="adm-input">
           <option value="">Все статусы</option>
@@ -30,6 +61,14 @@
             <option value="{{ val }}" {% if request.GET.status == val %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
         </select>
+      </div>
+      <div class="col-md-2">
+        <label class="adm-form-label">С даты</label>
+        <input type="date" name="date_from" value="{{ request.GET.date_from }}" class="adm-input">
+      </div>
+      <div class="col-md-2">
+        <label class="adm-form-label">По дату</label>
+        <input type="date" name="date_to" value="{{ request.GET.date_to }}" class="adm-input">
       </div>
       <div class="col-md-2 d-flex gap-2">
         <button type="submit" class="adm-btn adm-btn-primary w-100">Применить</button>
@@ -50,6 +89,7 @@
           <th>Помещение</th>
           <th>Дата/время</th>
           <th>Статус</th>
+          <th>Сумма</th>
           <th style="text-align:right;padding-right:20px;">Действия</th>
         </tr>
       </thead>
@@ -74,22 +114,49 @@
               <span class="adm-badge adm-badge-muted">{{ b.status }}</span>
             {% endif %}
           </td>
+          <td style="font-size:14px;font-weight:600;">{{ b.total_price }} ₽</td>
           <td style="text-align:right;padding-right:20px;">
             {% if status_choices %}
-            <form method="post" action="{% url 'admin_booking_status' b.id %}" style="display:inline;">
-              {% csrf_token %}
-              <select name="status" class="adm-input" style="width:auto;padding:4px 8px;font-size:12px;display:inline-block;" onchange="this.form.submit()">
-                {% for val, label in status_choices %}
-                  <option value="{{ val }}" {% if b.status == val %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-              </select>
-            </form>
+              <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;">
+                {% if b.status != 'confirmed' %}
+                  <form method="post" action="{% url 'admin_booking_status' b.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <input type="hidden" name="status" value="confirmed">
+                    <button type="submit" class="adm-btn adm-btn-success adm-btn-sm">
+                      <i class="bi bi-check-lg"></i> Подтвердить
+                    </button>
+                  </form>
+                {% endif %}
+
+                {% if b.status != 'cancelled' %}
+                  <form method="post" action="{% url 'admin_booking_status' b.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <input type="hidden" name="status" value="cancelled">
+                    <button type="submit" class="adm-btn adm-btn-danger adm-btn-sm">
+                      <i class="bi bi-x-lg"></i> Отменить
+                    </button>
+                  </form>
+                {% endif %}
+
+                {% if b.status != 'pending' %}
+                  <form method="post" action="{% url 'admin_booking_status' b.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <input type="hidden" name="status" value="pending">
+                    <button type="submit" class="adm-btn adm-btn-ghost adm-btn-sm">
+                      <i class="bi bi-arrow-counterclockwise"></i> В ожидание
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
             {% endif %}
           </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="6" style="text-align:center;padding:48px;color:#94a3b8;">
+          <td colspan="7" style="text-align:center;padding:48px;color:#94a3b8;">
             <i class="bi bi-calendar-x" style="font-size:40px;display:block;margin-bottom:12px;"></i>
             Бронирований нет
           </td>

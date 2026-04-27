@@ -45,6 +45,11 @@
                     </td>
                     <td><strong>{{ booking.total_price }} ₽</strong></td>
                     <td>
+                        {% if booking.status == 'pending' %}
+                            <a href="{% url 'payments:pay_for_booking' booking.id %}" class="btn btn-sm btn-success me-1">
+                                Оплатить
+                            </a>
+                        {% endif %}
                         {% if booking.status == 'pending' or booking.status == 'confirmed' %}
                             <form method="post" action="{% url 'bookings:cancel' booking.id %}" style="display:inline;">
                                 {% csrf_token %}

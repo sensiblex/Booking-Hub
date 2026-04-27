@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Оплата бронирования — Booking-Hub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/payments.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="payment-page">
+    <div class="container">
+        <div class="payment-panel">
+            <div class="payment-panel-header">
+                <h1><i class="bi bi-credit-card me-2"></i>Оплата бронирования</h1>
+                <p>Проверьте детали и выберите способ оплаты.</p>
+            </div>
+
+            <div class="payment-body">
+                <div class="row g-4">
+                    <div class="col-12 col-lg-5">
+                        <div class="payment-summary">
+                            <div class="payment-summary-row">
+                                <span class="payment-summary-label">Бронь</span>
+                                <span class="payment-summary-value">#{{ booking.id|default:'—' }}</span>
+                            </div>
+                            <div class="payment-summary-row">
+                                <span class="payment-summary-label">Помещение</span>
+                                <span class="payment-summary-value">{{ booking.space.name|default:'—' }}</span>
+                            </div>
+                            <div class="payment-summary-row">
+                                <span class="payment-summary-label">Дата</span>
+                                <span class="payment-summary-value">{{ booking.start_time|date:'d.m.Y'|default:'—' }}</span>
+                            </div>
+                            <div class="payment-summary-row">
+                                <span class="payment-summary-label">Время</span>
+                                <span class="payment-summary-value">
+                                    {{ booking.start_time|time:'H:i'|default:'—' }} — {{ booking.end_time|time:'H:i'|default:'—' }}
+                                </span>
+                            </div>
+                            <div class="payment-summary-row align-items-center">
+                                <span class="payment-summary-label">К оплате</span>
+                                <span class="payment-total">{{ amount|default:booking.total_price|default:'0' }} ₽</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-7">
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <h2 class="h5 fw-bold mb-3">Способ оплаты</h2>
+
+                            <div class="d-grid gap-3 mb-4">
+                                <label class="payment-method">
+                                    <input class="form-check-input" type="radio" name="method" value="card" checked>
+                                    <span>
+                                        <span class="payment-method-title">
+                                            <i class="bi bi-credit-card me-2"></i>Банковская карта
+                                        </span>
+                                        <span class="payment-method-desc d-block">Visa, Mastercard, Мир. Оплата в тестовом режиме.</span>
+                                    </span>
+                                </label>
+
+                                <label class="payment-method">
+                                    <input class="form-check-input" type="radio" name="method" value="sbp">
+                                    <span>
+                                        <span class="payment-method-title">
+                                            <i class="bi bi-qr-code me-2"></i>СБП
+                                        </span>
+                                        <span class="payment-method-desc d-block">Быстрая оплата через приложение банка.</span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div class="alert alert-info mb-4">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Интеграция с платежным шлюзом подключается на backend-этапе. Эта страница готова для передачи формы в обработчик оплаты.
+                            </div>
+
+                            <div class="d-grid gap-2 d-sm-flex">
+                                <button type="submit" class="btn btn-success btn-lg flex-sm-fill">
+                                    <i class="bi bi-lock-fill me-2"></i>Перейти к оплате
+                                </button>
+                                <a href="/bookings/history/" class="btn btn-outline-secondary btn-lg">Назад</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
