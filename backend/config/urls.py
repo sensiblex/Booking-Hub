@@ -29,6 +29,7 @@ urlpatterns = [
     
     #Бронирование
     path('bookings/', include('apps.bookings.urls')),
+    path('payments/', include('apps.payments.urls')),
     
     # Apps
     path('users/',  include('apps.users.urls')),

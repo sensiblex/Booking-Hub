@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Оплата не прошла — Booking-Hub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/payments.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="payment-page">
+    <div class="container">
+        <div class="payment-panel payment-result">
+            <div class="payment-body">
+                <div class="payment-result-icon fail">
+                    <i class="bi bi-x-lg"></i>
+                </div>
+
+                <h1 class="h3 fw-bold mb-3">Оплата не прошла</h1>
+                <p class="text-muted mb-4">
+                    {{ error_message|default:'Платеж не был завершен. Проверьте данные или попробуйте другой способ оплаты.' }}
+                </p>
+
+                <div class="payment-summary text-start">
+                    <div class="payment-summary-row">
+                        <span class="payment-summary-label">Бронь</span>
+                        <span class="payment-summary-value">#{{ booking.id|default:payment.booking.id|default:'—' }}</span>
+                    </div>
+                    <div class="payment-summary-row">
+                        <span class="payment-summary-label">Сумма</span>
+                        <span class="payment-summary-value">{{ payment.amount|default:booking.total_price|default:'0' }} ₽</span>
+                    </div>
+                    <div class="payment-summary-row">
+                        <span class="payment-summary-label">Статус</span>
+                        <span class="payment-summary-value">Не оплачено</span>
+                    </div>
+                </div>
+
+                <div class="payment-actions">
+                    <a href="{{ retry_url|default:'/bookings/history/' }}" class="btn btn-danger btn-lg">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Повторить оплату
+                    </a>
+                    <a href="/bookings/history/" class="btn btn-outline-secondary btn-lg">К бронированиям</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
