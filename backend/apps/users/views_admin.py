@@ -1,17 +1,15 @@
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import get_user_model
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Q
 
 try:
-    from apps.users.models import CustomUser
-except ImportError:
-    CustomUser = None
-
-try:
     from apps.spaces.models import Space
+    from apps.spaces.forms import SpaceForm
 except ImportError:
     Space = None
+    SpaceForm = None
 
 try:
     from apps.bookings.models import Booking
@@ -26,8 +24,9 @@ except ImportError:
 
 @staff_member_required(login_url='/users/login/')
 def admin_dashboard(request):
+    User = get_user_model()
     context = {
-        'users_count':    CustomUser.objects.count() if CustomUser else 0,
+        'users_count':    User.objects.count(),
         'spaces_count':   Space.objects.count()      if Space      else 0,
         'bookings_count': Booking.objects.count()    if Booking    else 0,
         'payments_count': Payment.objects.count()    if Payment    else 0,
@@ -53,47 +52,39 @@ def admin_spaces(request):
 
 @staff_member_required(login_url='/users/login/')
 def admin_space_create(request):
+    if SpaceForm is None:
+        messages.error(request, 'Модуль помещений недоступен.')
+        return redirect('admin_spaces')
+
+    form = SpaceForm(request.POST or None, request.FILES or None)
     if request.method == 'POST':
-        try:
-            Space.objects.create(
-                name=request.POST['name'],
-                address=request.POST['address'],
-                capacity=int(request.POST['capacity']),
-                price_per_hour=int(request.POST['price_per_hour']),
-                description=request.POST.get('description', ''),
-                has_projector='has_projector' in request.POST,
-                has_board='has_board' in request.POST,
-                has_wifi='has_wifi' in request.POST,
-                image=request.FILES.get('image'),
-            )
+        if form.is_valid():
+            form.save()
             messages.success(request, 'Помещение успешно добавлено.')
             return redirect('admin_spaces')
-        except Exception as e:
-            messages.error(request, f'Ошибка: {e}')
-    return render(request, 'admin/space_form.html', {'action': 'Добавить', 'space': None})
+        messages.error(request, 'Проверьте данные формы.')
+    return render(request, 'admin/space_form.html', {
+        'action': 'Добавить',
+        'form': form,
+        'space': None,
+    })
 
 
 @staff_member_required(login_url='/users/login/')
 def admin_space_edit(request, space_id):
     space = get_object_or_404(Space, pk=space_id)
+    form = SpaceForm(request.POST or None, request.FILES or None, instance=space)
     if request.method == 'POST':
-        try:
-            space.name           = request.POST['name']
-            space.address        = request.POST['address']
-            space.capacity       = int(request.POST['capacity'])
-            space.price_per_hour = int(request.POST['price_per_hour'])
-            space.description    = request.POST.get('description', '')
-            space.has_projector  = 'has_projector' in request.POST
-            space.has_board      = 'has_board'      in request.POST
-            space.has_wifi       = 'has_wifi'       in request.POST
-            if request.FILES.get('image'):
-                space.image = request.FILES['image']
-            space.save()
+        if form.is_valid():
+            form.save()
             messages.success(request, 'Помещение обновлено.')
             return redirect('admin_spaces')
-        except Exception as e:
-            messages.error(request, f'Ошибка: {e}')
-    return render(request, 'admin/space_form.html', {'action': 'Редактировать', 'space': space})
+        messages.error(request, 'Проверьте данные формы.')
+    return render(request, 'admin/space_form.html', {
+        'action': 'Редактировать',
+        'form': form,
+        'space': space,
+    })
 
 
 @staff_member_required(login_url='/users/login/')

@@ -3,6 +3,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Q
 from .models import User
 
 
@@ -61,10 +62,10 @@ def admin_users(request):
     q = request.GET.get('q', '').strip()
     if q:
         qs = qs.filter(
-            __import__('django.db.models', fromlist=['Q']).Q(username__icontains=q) |
-            __import__('django.db.models', fromlist=['Q']).Q(email__icontains=q) |
-            __import__('django.db.models', fromlist=['Q']).Q(first_name__icontains=q) |
-            __import__('django.db.models', fromlist=['Q']).Q(last_name__icontains=q)
+            Q(username__icontains=q) |
+            Q(email__icontains=q) |
+            Q(first_name__icontains=q) |
+            Q(last_name__icontains=q)
         )
 
     role = request.GET.get('role', '')
@@ -94,6 +95,8 @@ def admin_change_role(request, user_id):
         valid_roles = [r[0] for r in User.ROLE_CHOICES]
         if new_role in valid_roles:
             u.role = new_role
+            if new_role == 'administrator':
+                u.is_staff = True
             u.save()
             messages.success(request, f'Роль пользователя {u.username} изменена.')
     return redirect('users:admin_users')

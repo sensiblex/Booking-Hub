@@ -6,6 +6,7 @@ from .models import Space
 @admin.register(Space)
 class SpaceAdmin(admin.ModelAdmin):
     list_display = (
+        'preview_image',
         'name',
         'address',
         'capacity',
@@ -13,7 +14,6 @@ class SpaceAdmin(admin.ModelAdmin):
         'has_projector',
         'has_board',
         'has_wifi',
-        'preview_image',
         'created_at',
     )
 
@@ -53,9 +53,39 @@ class SpaceAdmin(admin.ModelAdmin):
 
     ordering = ('-created_at',)
     list_per_page = 20
+    actions = (
+        'enable_wifi',
+        'enable_projector',
+        'enable_board',
+        'disable_projector',
+        'disable_board',
+    )
 
+    @admin.display(description='Превью')
     def preview_image(self, obj):
-        if obj.image:
-            return format_html('<img src="{}" style="height:60px; border-radius:4px;" />', obj.image.url)
+        if obj.image and obj.image.name:
+            return format_html(
+                '<img src="{}" style="width:72px;height:48px;object-fit:cover;border-radius:4px;" />',
+                obj.image.url,
+            )
         return '—'
-    preview_image.short_description = 'Превью'
+
+    @admin.action(description='Включить Wi-Fi')
+    def enable_wifi(self, request, queryset):
+        queryset.update(has_wifi=True)
+
+    @admin.action(description='Добавить проектор')
+    def enable_projector(self, request, queryset):
+        queryset.update(has_projector=True)
+
+    @admin.action(description='Добавить доску')
+    def enable_board(self, request, queryset):
+        queryset.update(has_board=True)
+
+    @admin.action(description='Убрать проектор')
+    def disable_projector(self, request, queryset):
+        queryset.update(has_projector=False)
+
+    @admin.action(description='Убрать доску')
+    def disable_board(self, request, queryset):
+        queryset.update(has_board=False)

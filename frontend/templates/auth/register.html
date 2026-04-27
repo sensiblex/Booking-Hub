@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}Регистрация — Booking-Hub{% endblock %}
 
 {% block content %}
@@ -7,7 +9,7 @@
         <div class="card shadow-sm">
             <div class="card-body p-4">
                 <h2 class="text-center mb-4">Создать аккаунт</h2>
-                <form method="post">
+                <form method="post" data-client-validation novalidate>
                     {% csrf_token %}
                     
                     <div class="mb-3">
@@ -68,4 +70,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/validation.js' %}"></script>
 {% endblock %}

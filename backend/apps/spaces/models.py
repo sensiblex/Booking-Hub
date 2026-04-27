@@ -1,9 +1,53 @@
 import os
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from django.core.validators import FileExtensionValidator
-from PIL import Image
+from PIL import Image, ImageOps
+
+
+MAX_SPACE_IMAGE_SIZE = 8 * 1024 * 1024
+
+
+def validate_space_image_size(image):
+    if image and image.size > MAX_SPACE_IMAGE_SIZE:
+        raise ValidationError("Размер фото не должен превышать 8 МБ.")
+
+
+def _process_space_image(image_field):
+    if not image_field:
+        return
+
+    try:
+        path = image_field.path
+    except (NotImplementedError, ValueError):
+        return
+
+    if not path or not os.path.isfile(path):
+        return
+
+    try:
+        with Image.open(path) as img:
+            img = ImageOps.exif_transpose(img)
+            resampling = getattr(Image, 'Resampling', Image).LANCZOS
+            img.thumbnail((1600, 1600), resampling)
+
+            extension = os.path.splitext(path)[1].lower()
+            if extension in ('.jpg', '.jpeg'):
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+                img.save(path, format='JPEG', quality=85, optimize=True)
+            elif extension == '.png':
+                if img.mode not in ('RGB', 'RGBA'):
+                    img = img.convert('RGBA')
+                img.save(path, format='PNG', optimize=True)
+            elif extension == '.webp':
+                if img.mode not in ('RGB', 'RGBA'):
+                    img = img.convert('RGB')
+                img.save(path, format='WEBP', quality=85, method=6)
+    except (OSError, ValueError):
+        return
 
 
 class Space(models.Model):
@@ -23,10 +67,13 @@ class Space(models.Model):
         blank=True,
         null=True,
         verbose_name="Фото",
-        validators=[FileExtensionValidator(
-            allowed_extensions=['jpg', 'jpeg', 'png', 'webp'],
-            message="Допустимые форматы: jpg, jpeg, png, webp"
-        )]
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=['jpg', 'jpeg', 'png', 'webp'],
+                message="Допустимые форматы: jpg, jpeg, png, webp"
+            ),
+            validate_space_image_size,
+        ]
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -36,15 +83,7 @@ class Space(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        if self.image:
-            try:
-                img = Image.open(self.image.path)
-                if img.mode in ('RGBA', 'P'):
-                    img = img.convert('RGB')
-                img.thumbnail((1600, 1600), Image.LANCZOS)
-                img.save(self.image.path, format='JPEG', quality=85, optimize=True)
-            except Exception:
-                pass
+        _process_space_image(self.image)
 
     class Meta:
         verbose_name = "Помещение"

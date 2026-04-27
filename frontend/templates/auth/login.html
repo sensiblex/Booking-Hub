@@ -11,7 +11,7 @@
                 <div class="card-body p-4">
                     <h4 class="card-title text-center mb-4">Вход в аккаунт</h4>
 
-                    <form method="post">
+                    <form method="post" data-client-validation novalidate>
                         {% csrf_token %}
                         
                         <div class="mb-3">
@@ -39,4 +39,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/validation.js' %}"></script>
 {% endblock %}

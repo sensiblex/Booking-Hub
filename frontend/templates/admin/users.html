@@ -11,7 +11,7 @@
     <h1 class="adm-page-title"><i class="bi bi-people me-2" style="color:#6366f1;"></i>Пользователи</h1>
     <p class="adm-page-subtitle">Всего: <strong>{{ users|length }}</strong></p>
   </div>
-  <a href="/admin/users/customuser/add/" class="adm-btn adm-btn-primary">
+  <a href="{% url 'admin:users_user_add' %}" class="adm-btn adm-btn-primary">
     <i class="bi bi-person-plus"></i> Добавить
   </a>
 </div>
