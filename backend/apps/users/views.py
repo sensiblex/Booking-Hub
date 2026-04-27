@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, logout
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -11,6 +11,30 @@ class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2']
+
+
+class UsernameOrEmailAuthenticationForm(AuthenticationForm):
+    def clean(self):
+        username = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+
+        if username is not None and password:
+            auth_username = username
+            if '@' in username:
+                user = User.objects.filter(email__iexact=username).order_by('id').first()
+                if user is not None:
+                    auth_username = user.get_username()
+
+            self.user_cache = authenticate(
+                self.request,
+                username=auth_username,
+                password=password,
+            )
+            if self.user_cache is None:
+                raise self.get_invalid_login_error()
+            self.confirm_login_allowed(self.user_cache)
+
+        return self.cleaned_data
 
 
 def register(request):
@@ -29,16 +53,25 @@ def register(request):
 
 
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('/users/profile/')
+
+    next_url = request.GET.get('next') or request.POST.get('next') or '/users/profile/'
+
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = UsernameOrEmailAuthenticationForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request, user)
             messages.success(request, f'Добро пожаловать, {user.get_role_display()}!')
-            return redirect('/users/profile/')
+            return redirect(next_url)
+        messages.error(request, 'Не удалось войти. Проверьте имя пользователя и пароль.')
     else:
-        form = AuthenticationForm()
-    return render(request, 'auth/login.html', {'form': form})
+        form = UsernameOrEmailAuthenticationForm()
+    return render(request, 'auth/login.html', {
+        'form': form,
+        'next': next_url,
+    })
 
 
 def logout_view(request):
@@ -47,6 +80,7 @@ def logout_view(request):
     return redirect('/users/login/')
 
 
+@login_required(login_url='/users/login/')
 def profile(request):
     return render(request, 'auth/profile.html', {'user': request.user})
 

@@ -11,17 +11,40 @@
                 <div class="card-body p-4">
                     <h4 class="card-title text-center mb-4">Вход в аккаунт</h4>
 
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
                     <form method="post" data-client-validation novalidate>
                         {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ next }}">
                         
                         <div class="mb-3">
-                            <label for="id_username" class="form-label">Имя пользователя</label>
-                            <input type="text" name="username" id="id_username" class="form-control" required>
+                            <label for="id_username" class="form-label">Имя пользователя или email</label>
+                            <input type="text" name="username" id="id_username" class="form-control{% if form.username.errors %} is-invalid{% endif %}" value="{{ form.username.value|default:'' }}" required>
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.username.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
 
                         <div class="mb-3">
                             <label for="id_password" class="form-label">Пароль</label>
-                            <input type="password" name="password" id="id_password" class="form-control" required>
+                            <input type="password" name="password" id="id_password" class="form-control{% if form.password.errors %} is-invalid{% endif %}" required>
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 py-2">Войти</button>

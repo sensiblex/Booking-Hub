@@ -1,7 +1,9 @@
 from types import SimpleNamespace
 
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+
+from apps.bookings.models import Booking
 
 
 def _demo_booking(booking_id=None):
@@ -14,8 +16,14 @@ def _demo_booking(booking_id=None):
     )
 
 
+def _get_booking(booking_id=None):
+    if booking_id:
+        return get_object_or_404(Booking.objects.select_related('space', 'user'), pk=booking_id)
+    return _demo_booking()
+
+
 def payment_pay(request, booking_id=None):
-    booking = _demo_booking(booking_id)
+    booking = _get_booking(booking_id)
 
     if request.method == 'POST':
         return redirect(reverse('payments:success') + f'?booking_id={booking.id}')
@@ -28,7 +36,7 @@ def payment_pay(request, booking_id=None):
 
 def payment_success(request):
     booking_id = request.GET.get('booking_id')
-    booking = _demo_booking(booking_id)
+    booking = _get_booking(booking_id)
     payment = SimpleNamespace(
         id=request.GET.get('payment_id') or 1,
         booking=booking,
@@ -43,7 +51,7 @@ def payment_success(request):
 
 def payment_fail(request):
     booking_id = request.GET.get('booking_id')
-    booking = _demo_booking(booking_id)
+    booking = _get_booking(booking_id)
     payment = SimpleNamespace(
         booking=booking,
         amount=request.GET.get('amount') or booking.total_price,
