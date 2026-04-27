@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import booking_create, booking_history, manager_bookings, cancel_booking
 
-app_name = 'users'
+app_name = 'bookings'
 
 urlpatterns = [
     path('create/<int:space_id>/', booking_create, name='create'),
