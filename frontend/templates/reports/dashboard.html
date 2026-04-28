@@ -1,0 +1,559 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Отчёты и аналитика — {{ user.username }}{% endblock %}
+
+{% block extra_css %}
+<!-- Добавляем Chart.js для графиков -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+    .stat-card {
+        transition: transform 0.2s;
+        cursor: pointer;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin: 20px 0;
+    }
+    .filter-bar {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+    }
+    .badge-cancelled { background-color: #dc3545; }
+    .badge-completed { background-color: #28a745; }
+    .badge-active { background-color: #ffc107; color: #000; }
+    .insight-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    .trend-up { color: #28a745; }
+    .trend-down { color: #dc3545; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5 mb-2">
+                <i class="bi bi-graph-up"></i> Моя аналитика
+            </h1>
+            <p class="text-muted">Статистика бронирований и инсайты использования помещений</p>
+        </div>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="filter-bar mb-4">
+        <div class="row align-items-end">
+            <div class="col-md-5">
+                <label class="form-label fw-bold">Период анализа</label>
+                <select class="form-select" id="periodFilter">
+                    <option value="7">Последние 7 дней</option>
+                    <option value="30" selected>Последние 30 дней</option>
+                    <option value="90">Последние 90 дней</option>
+                    <option value="365">Последний год</option>
+                    <option value="0">Всё время</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Тип отчёта</label>
+                <select class="form-select" id="reportType">
+                    <option value="all">Общая статистика</option>
+                    <option value="spaces">По помещениям</option>
+                    <option value="time">По времени</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary w-100" onclick="updateReport()">
+                    <i class="bi bi-arrow-repeat"></i> Обновить данные
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основные метрики -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="text-muted mb-0">Всего бронирований</h6>
+                        <i class="bi bi-calendar-check fs-4 text-primary"></i>
+                    </div>
+                    <h2 class="mb-0" id="totalBookings">0</h2>
+                    <small class="text-muted">за выбранный период</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="text-muted mb-0">Активные/Предстоящие</h6>
+                        <i class="bi bi-clock-history fs-4 text-success"></i>
+                    </div>
+                    <h2 class="mb-0" id="activeBookings">0</h2>
+                    <small class="text-muted" id="activePercent">0% от всех</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="text-muted mb-0">Завершённые</h6>
+                        <i class="bi bi-check-circle fs-4 text-info"></i>
+                    </div>
+                    <h2 class="mb-0" id="completedBookings">0</h2>
+                    <small class="text-muted">успешно проведено</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="text-muted mb-0">Отменённые</h6>
+                        <i class="bi bi-x-circle fs-4 text-danger"></i>
+                    </div>
+                    <h2 class="mb-0" id="cancelledBookings">0</h2>
+                    <small class="text-muted" id="cancellationRate">0% отмен</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Дополнительные метрики (время) -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card stat-card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="text-muted mb-0">Общее время бронирований</h6>
+                        <i class="bi bi-clock fs-4 text-warning"></i>
+                    </div>
+                    <h2 class="mb-0" id="totalHours">0</h2>
+                    <small class="text-muted">часов использования</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="text-muted mb-0">Средняя длительность</h6>
+                        <i class="bi bi-hourglass-split fs-4 text-info"></i>
+                    </div>
+                    <h2 class="mb-0" id="avgDuration">0</h2>
+                    <small class="text-muted">часов за бронирование</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="text-muted mb-0">Частота бронирований</h6>
+                        <i class="bi bi-calendar-week fs-4 text-success"></i>
+                    </div>
+                    <h2 class="mb-0" id="frequency">0</h2>
+                    <small class="text-muted">раз(а) в месяц</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Инсайт-карточка -->
+    <div class="alert insight-card mb-4" id="insightCard" style="display: none;">
+        <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-lightbulb fs-1"></i>
+            <div>
+                <strong>📊 Инсайт</strong>
+                <p class="mb-0" id="insightText"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Графики -->
+    <div class="row g-4">
+        <!-- Динамика бронирований -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-bar-chart-steps"></i> Динамика бронирований
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="bookingsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Популярность помещений и дни недели -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pie-chart"></i> Популярность помещений
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="spacesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-week"></i> Активность по дням недели
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="weekdayChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Популярные часы -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Популярные часы бронирования
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="hoursChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статусы бронирований -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pie-chart"></i> Статусы бронирований
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Недавние бронирования -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-table"></i> Недавние бронирования
+                    </h5>
+                    <a href="/bookings/history/" class="btn btn-sm btn-outline-primary">Все бронирования →</a>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    <div id="recentBookingsList">
+                        <div class="text-center text-muted py-3">
+                            <div class="spinner-border" role="status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+let bookingsChart = null;
+let spacesChart = null;
+let weekdayChart = null;
+let hoursChart = null;
+let statusChart = null;
+
+async function updateReport() {
+    const period = document.getElementById('periodFilter').value;
+    const reportType = document.getElementById('reportType').value;
+    
+    try {
+        const response = await fetch(`/reports/api/dashboard/?period=${period}`);
+        const data = await response.json();
+        
+        // Обновляем основные метрики
+        document.getElementById('totalBookings').textContent = data.total_bookings || 0;
+        document.getElementById('activeBookings').textContent = data.active_bookings || 0;
+        document.getElementById('completedBookings').textContent = data.completed_bookings || 0;
+        document.getElementById('cancelledBookings').textContent = data.cancelled_bookings || 0;
+        
+        // Дополнительные метрики
+        document.getElementById('totalHours').textContent = data.total_hours?.toFixed(1) || 0;
+        document.getElementById('avgDuration').textContent = data.avg_duration?.toFixed(1) || 0;
+        
+        // Проценты
+        const total = data.total_bookings || 1;
+        const activePercent = ((data.active_bookings || 0) / total * 100).toFixed(1);
+        document.getElementById('activePercent').textContent = `${activePercent}% от всех`;
+        document.getElementById('cancellationRate').textContent = `${data.cancellation_rate || 0}% отмен`;
+        
+        // Частота бронирований
+        const daysInPeriod = period == 0 ? 365 : parseInt(period);
+        const frequency = ((data.total_bookings || 0) / (daysInPeriod / 30)).toFixed(1);
+        document.getElementById('frequency').textContent = frequency;
+        
+        // Показываем инсайт
+        showInsight(data);
+        
+        // Обновляем графики
+        updateBookingsChart(data);
+        updateSpacesChart(data);
+        updateWeekdayChart(data);
+        updateHoursChart(data);
+        updateStatusChart(data);
+        updateRecentBookings(data);
+        
+    } catch (error) {
+        console.error('Ошибка загрузки данных:', error);
+        showError('Не удалось загрузить данные отчёта');
+    }
+}
+
+function updateBookingsChart(data) {
+    const ctx = document.getElementById('bookingsChart').getContext('2d');
+    if (bookingsChart) bookingsChart.destroy();
+    
+    bookingsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.dates || [],
+            datasets: [{
+                label: 'Количество бронирований',
+                data: data.bookings_by_date || [],
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } }
+        }
+    });
+}
+
+function updateSpacesChart(data) {
+    const ctx = document.getElementById('spacesChart').getContext('2d');
+    if (spacesChart) spacesChart.destroy();
+    
+    if (data.space_names && data.space_names.length > 0) {
+        spacesChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: data.space_names,
+                datasets: [{
+                    data: data.space_bookings,
+                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    }
+}
+
+function updateWeekdayChart(data) {
+    const ctx = document.getElementById('weekdayChart').getContext('2d');
+    if (weekdayChart) weekdayChart.destroy();
+    
+    weekdayChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.weekday_labels || ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'],
+            datasets: [{
+                label: 'Количество бронирований',
+                data: data.weekday_stats || [0, 0, 0, 0, 0, 0, 0],
+                backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                borderColor: 'rgb(16, 185, 129)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, title: { display: true, text: 'Количество' } } }
+        }
+    });
+}
+
+function updateHoursChart(data) {
+    const ctx = document.getElementById('hoursChart').getContext('2d');
+    if (hoursChart) hoursChart.destroy();
+    
+    if (data.popular_hours && data.popular_hours.length > 0) {
+        hoursChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.popular_hours.map(h => `${h}:00`),
+                datasets: [{
+                    label: 'Количество бронирований',
+                    data: data.popular_hours_counts,
+                    backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                    borderColor: 'rgb(245, 158, 11)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+}
+
+function updateStatusChart(data) {
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    if (statusChart) statusChart.destroy();
+    
+    if (data.status_breakdown) {
+        statusChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Активные', 'Завершённые', 'Отменённые'],
+                datasets: [{
+                    data: [
+                        data.status_breakdown.active || 0,
+                        data.status_breakdown.completed || 0,
+                        data.status_breakdown.cancelled || 0
+                    ],
+                    backgroundColor: ['#ffc107', '#28a745', '#dc3545']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    }
+}
+
+function updateRecentBookings(data) {
+    const container = document.getElementById('recentBookingsList');
+    
+    if (!data.recent_bookings || data.recent_bookings.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-3">📭 Нет бронирований за выбранный период</div>';
+        return;
+    }
+    
+    container.innerHTML = data.recent_bookings.map(booking => `
+        <div class="border-bottom pb-3 mb-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <strong class="fs-5">${escapeHtml(booking.space_name)}</strong>
+                    <div class="small text-muted mt-1">
+                        <i class="bi bi-calendar"></i> ${booking.date} &nbsp;|&nbsp;
+                        <i class="bi bi-clock"></i> ${booking.time}
+                        ${booking.duration ? `&nbsp;|&nbsp;<i class="bi bi-hourglass"></i> ${booking.duration}` : ''}
+                    </div>
+                </div>
+                <span class="badge ${getStatusBadge(booking.status)} badge-status-${booking.status}">${booking.status_display || booking.status}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showInsight(data) {
+    const insightCard = document.getElementById('insightCard');
+    const insightText = document.getElementById('insightText');
+    
+    // Генерируем полезный инсайт на основе данных
+    let insight = '';
+    
+    if (data.total_bookings === 0) {
+        insight = 'У вас пока нет бронирований. Перейдите в раздел "Помещения", чтобы забронировать пространство! 🚀';
+    } else if (data.weekday_stats) {
+        const maxDayIndex = data.weekday_stats.indexOf(Math.max(...data.weekday_stats));
+        const days = ['понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу', 'воскресенье'];
+        
+        if (maxDayIndex !== -1 && data.weekday_stats[maxDayIndex] > 0) {
+            insight = `⭐ Вы чаще всего бронируете помещения в ${days[maxDayIndex]}. Это ваш самый активный день!`;
+        }
+        
+        if (data.cancellation_rate > 30) {
+            insight = `⚠️ Ваш процент отмен (${data.cancellation_rate}%) выше среднего. Попробуйте планировать бронирования заранее.`;
+        } else if (data.avg_duration > 3) {
+            insight = `💡 Вы бронируете помещения в среднем на ${data.avg_duration} часов. Это отличное время для продуктивной работы!`;
+        } else if (data.total_hours > 10) {
+            insight = `🎉 Отлично! За выбранный период вы использовали помещения ${data.total_hours.toFixed(0)} часов. Так держать!`;
+        } else {
+            insight = `📈 Продолжайте бронировать помещения! Уже ${data.total_bookings} бронирований — хороший результат.`;
+        }
+    }
+    
+    if (insight) {
+        insightText.textContent = insight;
+        insightCard.style.display = 'block';
+    } else {
+        insightCard.style.display = 'none';
+    }
+}
+
+function getStatusBadge(status) {
+    const badges = {
+        'active': 'bg-warning text-dark',
+        'completed': 'bg-success',
+        'cancelled': 'bg-danger',
+        'pending': 'bg-secondary'
+    };
+    return badges[status] || 'bg-secondary';
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showError(message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    setTimeout(() => alertDiv.remove(), 3000);
+}
+
+// Загрузка при старте
+document.addEventListener('DOMContentLoaded', () => {
+    updateReport();
+    setInterval(updateReport, 60000); // Обновление каждую минуту
+});
+</script>
+{% endblock %}
+{% endblock %}
