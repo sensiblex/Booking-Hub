@@ -1,6 +1,6 @@
-# =============================================================
-# PRODUCTION — запуск на сервере
-# docker compose up -d
+﻿# =============================================================
+# LOCAL DEV — единый compose для локального запуска
+# docker compose up -d --build
 # =============================================================
 services:
 
@@ -25,11 +25,26 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+    command: >-
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py seed_spaces &&
+             python manage.py runserver 0.0.0.0:8000"
     container_name: booking-hub-backend
     restart: unless-stopped
     volumes:
+      - ./backend:/app
+      - ./frontend:/app/frontend
       - media_volume:/app/media
       - static_volume:/app/static
+    ports:
+      - "8000:8000"
+    environment:
+      DEBUG: 'True'
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db
+      DB_PORT: 5432
     env_file: .env
     depends_on:
       db:
@@ -39,21 +54,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 60s
-
-  nginx:
-    image: nginx:alpine
-    container_name: booking-hub-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - static_volume:/static:ro
-      - media_volume:/media:ro
-    depends_on:
-      backend:
-        condition: service_healthy
+      start_period: 30s
 
 volumes:
   postgres_data:

@@ -1,22 +1,18 @@
-# =============================================================
-# Makefile — удобные команды для команды
+﻿# =============================================================
+# Makefile — локальный запуск проекта
 # =============================================================
 
-.PHONY: dev prod build down logs shell migrate backup restore
+.PHONY: dev dev-build dev-down build down logs logs-all ps shell migrate createsuperuser backup restore
 
-# ─── Разработка ───────────────────────────────────────────────
+# Локальная разработка
 dev:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+	docker compose up
 
 dev-build:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+	docker compose up --build
 
 dev-down:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml down
-
-# ─── Продакшн ───────────────────────────────────────────────
-prod:
-	docker compose up -d
+	docker compose down
 
 build:
 	docker compose build backend
@@ -24,7 +20,7 @@ build:
 down:
 	docker compose down
 
-# ─── Диагностика ───────────────────────────────────────────
+# Логи
 logs:
 	docker compose logs -f backend
 
@@ -34,7 +30,7 @@ logs-all:
 ps:
 	docker compose ps
 
-# ─── Django ───────────────────────────────────────────────
+# Django
 shell:
 	docker compose exec backend python manage.py shell
 
@@ -44,7 +40,7 @@ migrate:
 createsuperuser:
 	docker compose exec backend python manage.py createsuperuser
 
-# ─── Бэкап / восстановление ────────────────────────────────
+# Бекап / восстановление
 backup:
 	bash scripts/backup.sh
 
