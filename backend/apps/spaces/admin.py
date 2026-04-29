@@ -1,6 +1,36 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Space
+from .models import Amenity, Category, Space, SpacePhoto
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug')
+    search_fields = ('name', 'slug')
+    prepopulated_fields = {'slug': ('name',)}
+
+
+@admin.register(Amenity)
+class AmenityAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'icon')
+    search_fields = ('name', 'slug')
+    prepopulated_fields = {'slug': ('name',)}
+
+
+class SpacePhotoInline(admin.TabularInline):
+    model = SpacePhoto
+    extra = 1
+    fields = ('preview_image', 'image', 'alt_text', 'sort_order')
+    readonly_fields = ('preview_image',)
+
+    @admin.display(description='Превью')
+    def preview_image(self, obj):
+        if obj.image and obj.image.name:
+            return format_html(
+                '<img src="{}" style="width:72px;height:48px;object-fit:cover;border-radius:4px;" />',
+                obj.image.url,
+            )
+        return '—'
 
 
 @admin.register(Space)
@@ -8,6 +38,7 @@ class SpaceAdmin(admin.ModelAdmin):
     list_display = (
         'preview_image',
         'name',
+        'category',
         'address',
         'capacity',
         'price_per_hour',
@@ -18,6 +49,8 @@ class SpaceAdmin(admin.ModelAdmin):
     )
 
     list_filter = (
+        'category',
+        'amenities',
         'has_projector',
         'has_board',
         'has_wifi',
@@ -35,13 +68,13 @@ class SpaceAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Основная информация', {
-            'fields': ('name', 'address', 'description')
+            'fields': ('name', 'category', 'address', 'description')
         }),
         ('Параметры', {
             'fields': ('capacity', 'price_per_hour')
         }),
         ('Удобства', {
-            'fields': ('has_projector', 'has_board', 'has_wifi')
+            'fields': ('amenities', 'has_projector', 'has_board', 'has_wifi')
         }),
         ('Медиа', {
             'fields': ('image', 'preview_image')
@@ -53,6 +86,7 @@ class SpaceAdmin(admin.ModelAdmin):
 
     ordering = ('-created_at',)
     list_per_page = 20
+    inlines = (SpacePhotoInline,)
     actions = (
         'enable_wifi',
         'enable_projector',

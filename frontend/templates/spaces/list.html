@@ -263,12 +263,12 @@
         <h1>Каталог помещений</h1>
         <p class="subtitle">Найдите идеальное пространство для работы, встреч или мероприятий</p>
       </div>
-      <div class="search-bar-wrap" style="min-width:280px; max-width:360px; width:100%;">
+      <form method="get" class="search-bar-wrap" style="min-width:280px; max-width:360px; width:100%;">
         <i class="bi bi-search"></i>
-        <input id="js-search" type="text" class="form-control search-input"
+        <input id="js-search" name="q" type="text" class="form-control search-input"
                placeholder="Поиск по названию или адресу…"
-               value="{{ request.GET.search|default:'' }}">
-      </div>
+               value="{{ request.GET.q|default:'' }}">
+      </form>
     </div>
   </div>
 
@@ -276,20 +276,19 @@
 
     <!-- ── FILTER PANEL ── -->
     <div style="width: 260px; flex-shrink: 0;">
-      <div class="filter-panel">
+      <form method="get" class="filter-panel">
         <p class="panel-title">Фильтры</p>
 
         <!-- Тип -->
         <div class="filter-section">
           <label class="filter-label">Тип помещения</label>
-          <select id="js-type" class="filter-select">
+          <select id="js-type" name="category" class="filter-select">
             <option value="">Все типы</option>
-            <option value="Переговорная">Переговорная</option>
-            <option value="Конференц">Конференц-зал</option>
-            <option value="Лофт">Лофт / Open space</option>
-            <option value="Кабинет">Кабинет</option>
-            <option value="Тренинг">Учебный класс</option>
-            <option value="Подиум">Подиум / Зал</option>
+            {% for category in categories %}
+              <option value="{{ category.slug }}" {% if request.GET.category == category.slug %}selected{% endif %}>
+                {{ category.name }}
+              </option>
+            {% endfor %}
           </select>
         </div>
 
@@ -297,8 +296,8 @@
         <div class="filter-section">
           <label class="filter-label">Вместимость (чел.)</label>
           <div class="range-row">
-            <input id="js-cap-min" class="filter-input" type="number" placeholder="От" min="1">
-            <input id="js-cap-max" class="filter-input" type="number" placeholder="До" min="1">
+            <input id="js-cap-min" name="capacity_min" class="filter-input" type="number" placeholder="От" min="1" value="{{ request.GET.capacity_min|default:'' }}">
+            <input id="js-cap-max" name="capacity_max" class="filter-input" type="number" placeholder="До" min="1" value="{{ request.GET.capacity_max|default:'' }}">
           </div>
         </div>
 
@@ -306,8 +305,8 @@
         <div class="filter-section">
           <label class="filter-label">Цена за час (₽)</label>
           <div class="range-row">
-            <input id="js-price-min" class="filter-input" type="number" placeholder="От" min="0">
-            <input id="js-price-max" class="filter-input" type="number" placeholder="До" min="0">
+            <input id="js-price-min" name="price_min" class="filter-input" type="number" placeholder="От" min="0" value="{{ request.GET.price_min|default:'' }}">
+            <input id="js-price-max" name="price_max" class="filter-input" type="number" placeholder="До" min="0" value="{{ request.GET.price_max|default:'' }}">
           </div>
           <div class="price-range-display">
             <span id="price-hint">Любая цена</span>
@@ -318,22 +317,24 @@
         <div class="filter-section">
           <label class="filter-label">Оснащение</label>
           <div class="amenity-chips">
-            <div class="amenity-chip" data-amenity="projector">
-              <i class="bi bi-projector"></i> Проектор
-            </div>
-            <div class="amenity-chip" data-amenity="board">
-              <i class="bi bi-easel2"></i> Доска
-            </div>
-            <div class="amenity-chip" data-amenity="wifi">
-              <i class="bi bi-wifi"></i> Wi-Fi
-            </div>
+            {% for amenity in amenities %}
+              <label class="amenity-chip {% if amenity.slug in selected_amenities %}active{% endif %}" data-amenity="{{ amenity.slug }}">
+                <input type="checkbox" name="amenities" value="{{ amenity.slug }}" {% if amenity.slug in selected_amenities %}checked{% endif %} hidden>
+                <i class="bi {{ amenity.icon|default:'bi-check2-circle' }}"></i> {{ amenity.name }}
+              </label>
+            {% endfor %}
           </div>
         </div>
 
-        <button id="js-reset" class="filter-reset">
-          <i class="bi bi-arrow-counterclockwise me-1"></i>Сбросить фильтры
+        <input type="hidden" name="q" value="{{ request.GET.q|default:'' }}">
+        <input type="hidden" name="sort" id="js-sort-hidden" value="{{ request.GET.sort|default:'' }}">
+        <button type="submit" class="filter-reset" style="background: var(--sp-primary-light); color: var(--sp-primary); border-color: rgba(1,105,111,.25);">
+          <i class="bi bi-funnel me-1"></i>Применить фильтры
         </button>
-      </div>
+        <a id="js-reset" href="{% url 'spaces:list' %}" class="filter-reset" style="display:block;text-align:center;text-decoration:none;">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Сбросить фильтры
+        </a>
+      </form>
     </div>
 
     <!-- ── CARDS ── -->
@@ -345,10 +346,10 @@
         </p>
         <select id="js-sort" class="sort-select">
           <option value="default">По умолчанию</option>
-          <option value="price_asc">Цена: по возрастанию</option>
-          <option value="price_desc">Цена: по убыванию</option>
-          <option value="capacity_asc">Вместимость: меньше</option>
-          <option value="capacity_desc">Вместимость: больше</option>
+          <option value="price_asc" {% if request.GET.sort == 'price_asc' %}selected{% endif %}>Цена: по возрастанию</option>
+          <option value="price_desc" {% if request.GET.sort == 'price_desc' %}selected{% endif %}>Цена: по убыванию</option>
+          <option value="capacity_asc" {% if request.GET.sort == 'capacity_asc' %}selected{% endif %}>Вместимость: меньше</option>
+          <option value="capacity_desc" {% if request.GET.sort == 'capacity_desc' %}selected{% endif %}>Вместимость: больше</option>
         </select>
       </div>
 
@@ -359,6 +360,8 @@
         <div class="space-card"
              data-name="{{ space.name|lower }}"
              data-address="{{ space.address|lower }}"
+             data-category="{{ space.category.slug|default:'' }}"
+             data-amenities="{% for amenity in space.amenities.all %}{{ amenity.slug }} {% empty %}{% if space.has_projector %}projector {% endif %}{% if space.has_board %}board {% endif %}{% if space.has_wifi %}wifi{% endif %}{% endfor %}"
              data-capacity="{{ space.capacity }}"
              data-price="{{ space.price_per_hour }}"
              data-projector="{{ space.has_projector|lower }}"
@@ -370,6 +373,10 @@
           <div class="card-thumb">
             {% if space.image %}
               <img src="{{ space.image.url }}" alt="{{ space.name }}" loading="lazy">
+            {% elif space.photos.all %}
+              {% with first_photo=space.photos.all|first %}
+                <img src="{{ first_photo.image.url }}" alt="{{ first_photo.alt_text|default:space.name }}" loading="lazy">
+              {% endwith %}
             {% else %}
               <div class="no-image-thumb">
                 <i class="bi bi-building"></i>
@@ -392,6 +399,16 @@
 
             <!-- Specs -->
             <div class="card-specs">
+              {% if space.category %}
+              <div class="spec-chip">
+                <i class="bi bi-tag"></i> {{ space.category.name }}
+              </div>
+              {% endif %}
+              {% for amenity in space.amenities.all %}
+              <div class="spec-chip highlight">
+                <i class="bi {{ amenity.icon|default:'bi-check2-circle' }}"></i> {{ amenity.name }}
+              </div>
+              {% empty %}
               {% if space.has_wifi %}
               <div class="spec-chip highlight">
                 <i class="bi bi-wifi"></i> Wi-Fi
@@ -410,6 +427,7 @@
               {% if not space.has_wifi and not space.has_projector and not space.has_board %}
               <div class="spec-chip"><i class="bi bi-info-circle"></i> Базовое оснащение</div>
               {% endif %}
+              {% endfor %}
             </div>
 
             <!-- Description -->
@@ -479,6 +497,8 @@
   elChips.forEach(chip => {
     chip.addEventListener('click', () => {
       chip.classList.toggle('active');
+      const checkbox = chip.querySelector('input[type="checkbox"]');
+      if (checkbox) checkbox.checked = chip.classList.contains('active');
       run();
     });
   });
@@ -513,20 +533,17 @@
     all.forEach(card => {
       const name     = card.dataset.name;
       const address  = card.dataset.address;
+      const category = card.dataset.category;
+      const cardAmenities = (card.dataset.amenities || '').split(/\s+/).filter(Boolean);
       const capacity = parseInt(card.dataset.capacity);
       const price    = parseInt(card.dataset.price);
-      const proj     = card.dataset.projector === 'true';
-      const board    = card.dataset.board     === 'true';
-      const wifi     = card.dataset.wifi      === 'true';
 
       let ok = true;
       if (q     && !name.includes(q) && !address.includes(q)) ok = false;
-      if (type  && !name.includes(type))   ok = false;
+      if (type  && category !== type) ok = false;
       if (capacity < capMin || capacity > capMax) ok = false;
       if (price    < priceMin || price > priceMax) ok = false;
-      if (amenities.includes('projector') && !proj)  ok = false;
-      if (amenities.includes('board')     && !board) ok = false;
-      if (amenities.includes('wifi')      && !wifi)  ok = false;
+      if (!amenities.every(amenity => cardAmenities.includes(amenity))) ok = false;
 
       card.style.display = ok ? '' : 'none';
       if (ok) visible.push(card);
@@ -562,8 +579,18 @@
     run();
   });
 
+  elSort.addEventListener('change', () => {
+    const url = new URL(window.location.href);
+    if (elSort.value === 'default') {
+      url.searchParams.delete('sort');
+    } else {
+      url.searchParams.set('sort', elSort.value);
+    }
+    window.location.href = url.toString();
+  });
+
   // ── bind ──
-  [elSearch, elType, elCapMin, elCapMax, elPriceMin, elPriceMax, elSort]
+  [elSearch, elType, elCapMin, elCapMax, elPriceMin, elPriceMax]
     .forEach(el => el.addEventListener('input', run));
 
   // initial run (preserve URL search param)

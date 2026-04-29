@@ -46,17 +46,58 @@ def _process_space_image(image_field):
                 if img.mode not in ('RGB', 'RGBA'):
                     img = img.convert('RGB')
                 img.save(path, format='WEBP', quality=85, method=6)
-    except (OSError, ValueError):
+    except (OSError, SyntaxError, ValueError):
         return
+
+
+class Category(models.Model):
+    name = models.CharField(max_length=120, unique=True, verbose_name="Название")
+    slug = models.SlugField(max_length=140, unique=True, verbose_name="Слаг")
+
+    class Meta:
+        verbose_name = "Категория"
+        verbose_name_plural = "Категории"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class Amenity(models.Model):
+    name = models.CharField(max_length=120, unique=True, verbose_name="Название")
+    slug = models.SlugField(max_length=140, unique=True, verbose_name="Слаг")
+    icon = models.CharField(max_length=60, blank=True, verbose_name="Bootstrap icon")
+
+    class Meta:
+        verbose_name = "Удобство"
+        verbose_name_plural = "Удобства"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
 
 
 class Space(models.Model):
     name = models.CharField(max_length=200, verbose_name="Название")
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="spaces",
+        verbose_name="Категория",
+    )
     address = models.CharField(max_length=300, verbose_name="Адрес")
     capacity = models.PositiveIntegerField(verbose_name="Вместимость (чел.)")
     price_per_hour = models.PositiveIntegerField(verbose_name="Цена за час (₽)")
 
     description = models.TextField(blank=True, verbose_name="Описание")
+    amenities = models.ManyToManyField(
+        Amenity,
+        blank=True,
+        related_name="spaces",
+        verbose_name="Удобства",
+    )
 
     has_projector = models.BooleanField(default=False, verbose_name="Есть проектор")
     has_board = models.BooleanField(default=False, verbose_name="Есть доска")
@@ -90,6 +131,41 @@ class Space(models.Model):
         verbose_name_plural = "Помещения"
 
 
+class SpacePhoto(models.Model):
+    space = models.ForeignKey(
+        Space,
+        on_delete=models.CASCADE,
+        related_name="photos",
+        verbose_name="Помещение",
+    )
+    image = models.ImageField(
+        upload_to='spaces/gallery/%Y/%m/',
+        verbose_name="Фото",
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=['jpg', 'jpeg', 'png', 'webp'],
+                message="Допустимые форматы: jpg, jpeg, png, webp"
+            ),
+            validate_space_image_size,
+        ],
+    )
+    alt_text = models.CharField(max_length=200, blank=True, verbose_name="Описание фото")
+    sort_order = models.PositiveIntegerField(default=0, verbose_name="Порядок")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Фото помещения"
+        verbose_name_plural = "Фото помещений"
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return self.alt_text or f"Фото: {self.space}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        _process_space_image(self.image)
+
+
 def _delete_file(path):
     """Удаляет файл с диска если он существует."""
     if path and os.path.isfile(path):
@@ -111,6 +187,24 @@ def space_pre_save(sender, instance, **kwargs):
     try:
         old = Space.objects.get(pk=instance.pk)
     except Space.DoesNotExist:
+        return
+    if old.image and old.image != instance.image:
+        _delete_file(old.image.path)
+
+
+@receiver(post_delete, sender=SpacePhoto)
+def space_photo_post_delete(sender, instance, **kwargs):
+    if instance.image:
+        _delete_file(instance.image.path)
+
+
+@receiver(pre_save, sender=SpacePhoto)
+def space_photo_pre_save(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+    try:
+        old = SpacePhoto.objects.get(pk=instance.pk)
+    except SpacePhoto.DoesNotExist:
         return
     if old.image and old.image != instance.image:
         _delete_file(old.image.path)
