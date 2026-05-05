@@ -1,9 +1,14 @@
+from datetime import timedelta
+
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import get_user_model
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
+from django.db.models.functions import TruncDate, TruncWeek
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 
 try:
@@ -35,6 +40,87 @@ def admin_dashboard(request):
         'payments_count': Payment.objects.count()    if Payment    else 0,
     }
     return render(request, 'admin/dashboard.html', context)
+
+
+@staff_member_required(login_url='/users/login/')
+def admin_dashboard_api(request):
+    User = get_user_model()
+
+    allowed_periods = {7, 30, 365}
+    period_days = request.GET.get('period', '30')
+    try:
+        period_days = int(period_days)
+    except (TypeError, ValueError):
+        period_days = 30
+    if period_days not in allowed_periods:
+        period_days = 30
+
+    start_date = timezone.now() - timedelta(days=period_days)
+
+    users_by_role = [
+        {'role': row['role'], 'count': row['count']}
+        for row in User.objects.values('role').annotate(count=Count('id')).order_by('role')
+    ]
+
+    bookings_qs = Booking.objects.filter(created_at__gte=start_date) if Booking else []
+    payments_qs = Payment.objects.filter(created_at__gte=start_date) if Payment else []
+
+    bookings_by_day = []
+    bookings_by_week = []
+    top_spaces = []
+    if Booking:
+        bookings_by_day = [
+            {
+                'date': row['day'].isoformat(),
+                'count': row['count'],
+            }
+            for row in bookings_qs.annotate(day=TruncDate('created_at'))
+            .values('day')
+            .annotate(count=Count('id'))
+            .order_by('day')
+        ]
+
+        bookings_by_week = [
+            {
+                'week': row['week'].date().isoformat() if hasattr(row['week'], 'date') else row['week'].isoformat(),
+                'count': row['count'],
+            }
+            for row in bookings_qs.annotate(week=TruncWeek('created_at'))
+            .values('week')
+            .annotate(count=Count('id'))
+            .order_by('week')
+        ]
+
+        top_spaces = [
+            {
+                'space_id': row['space_id'],
+                'space_name': row['space__name'],
+                'bookings_count': row['bookings_count'],
+            }
+            for row in bookings_qs.values('space_id', 'space__name')
+            .annotate(bookings_count=Count('id'))
+            .order_by('-bookings_count', 'space__name')[:5]
+        ]
+
+    revenue_total = 0
+    if Payment:
+        revenue_total = payments_qs.aggregate(total=Sum('amount')).get('total') or 0
+
+    payload = {
+        'users_by_role': users_by_role,
+        'bookings_by_day': bookings_by_day,
+        'bookings_by_week': bookings_by_week,
+        'revenue': {
+            'period_total': revenue_total,
+            'currency': 'RUB',
+        },
+        'top_spaces': top_spaces,
+        'meta': {
+            'period_days': period_days,
+            'generated_at': timezone.now().isoformat(),
+        },
+    }
+    return JsonResponse(payload)
 
 
 # ---- Spaces ----
