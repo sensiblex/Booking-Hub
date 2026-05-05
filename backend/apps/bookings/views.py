@@ -75,7 +75,7 @@ def check_booking_availability(request):
 def booking_history(request):
     bookings = (
         Booking.objects
-        .select_related('space')
+        .select_related('space', 'payment')
         .filter(user=request.user)
         .order_by('-start_time')
     )
