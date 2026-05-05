@@ -100,8 +100,8 @@
           <td style="font-size:14px;">{{ b.user.username|default:'—' }}</td>
           <td style="font-size:14px;">{{ b.space.name|default:'—' }}</td>
           <td style="font-size:12px;color:#64748b;">
-            {{ b.start_time|date:'d.m.Y H:i'|default:'—' }}
-            {% if b.end_time %} — {{ b.end_time|date:'H:i' }}{% endif %}
+            {{ b.check_in|date:'d.m.Y H:i'|default:'—' }}
+            {% if b.check_out %} — {{ b.check_out|date:'H:i' }}{% endif %}
           </td>
           <td>
             {% if b.status == 'confirmed' %}

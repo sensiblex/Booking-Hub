@@ -31,8 +31,8 @@
                         <small class="text-muted">{{ booking.space.address }}</small>
                     </td>
                     <td>
-                        {{ booking.start_time|date:"d.m.Y" }}<br>
-                        <span class="text-muted">{{ booking.start_time|time:"H:i" }} — {{ booking.end_time|time:"H:i" }}</span>
+                        {{ booking.check_in|date:"d.m.Y" }}<br>
+                        <span class="text-muted">{{ booking.check_in|time:"H:i" }} — {{ booking.check_out|time:"H:i" }}</span>
                     </td>
                     <td>
                         {% if booking.status == 'confirmed' %}

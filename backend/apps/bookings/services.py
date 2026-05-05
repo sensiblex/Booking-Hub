@@ -35,45 +35,46 @@ def parse_booking_datetime(value):
     return parsed
 
 
-def calculate_total_price(space, start_time, end_time):
-    duration_hours = (end_time - start_time).total_seconds() / 3600
+def calculate_total_price(space, check_in, check_out):
+    duration_hours = (check_out - check_in).total_seconds() / 3600
     return max(0, ceil(duration_hours * space.price_per_hour))
 
 
-def get_overlapping_bookings(space, start_time, end_time, exclude_booking_id=None):
+def get_overlapping_bookings(space, check_in, check_out, exclude_booking_id=None):
     bookings = Booking.objects.filter(
         space=space,
         status__in=[Booking.STATUS_PENDING, Booking.STATUS_CONFIRMED],
-        start_time__lt=end_time,
-        end_time__gt=start_time,
+        check_in__lt=check_out,
+        check_out__gt=check_in,
     )
     if exclude_booking_id:
         bookings = bookings.exclude(pk=exclude_booking_id)
     return bookings
 
 
-def check_availability(space, start_time, end_time, exclude_booking_id=None):
-    if end_time <= start_time:
+def check_availability(space, check_in, check_out, exclude_booking_id=None):
+    if check_out <= check_in:
         raise ValidationError('Окончание должно быть позже начала.')
 
-    if start_time < timezone.now():
+    if check_in < timezone.now():
         raise ValidationError('Нельзя создать бронирование в прошлом.')
 
-    if get_overlapping_bookings(space, start_time, end_time, exclude_booking_id).exists():
+    if get_overlapping_bookings(space, check_in, check_out, exclude_booking_id).exists():
         raise ValidationError('Выбранный интервал уже занят.')
 
     return True
 
 
-def create_booking(user, space, start_time, end_time, comment=''):
-    check_availability(space, start_time, end_time)
+def create_booking(user, space, check_in, check_out, guests=1, special_requests=''):
+    check_availability(space, check_in, check_out)
     booking = Booking(
         user=user,
         space=space,
-        start_time=start_time,
-        end_time=end_time,
-        comment=comment,
-        total_price=calculate_total_price(space, start_time, end_time),
+        check_in=check_in,
+        check_out=check_out,
+        guests=guests,
+        special_requests=special_requests,
+        total_price=calculate_total_price(space, check_in, check_out),
     )
     booking.full_clean()
     booking.save()
