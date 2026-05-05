@@ -31,7 +31,10 @@
   display: flex; align-items: center; justify-content: center;
   margin-bottom: 2rem;
   flex-shrink: 0;
+  position: relative;
 }
+.space-hero-slide { display: none; width: 100%; height: 100%; }
+.space-hero-slide.active { display: flex; align-items: center; justify-content: center; }
 .space-hero img {
   width: 100%; height: 100%; object-fit: cover;
 }
@@ -41,6 +44,16 @@
 }
 .space-hero .no-image i { font-size: 4rem; opacity: .35; }
 .space-hero .no-image span { font-size: .85rem; color: var(--sp-muted); }
+.carousel-btn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 40px; height: 40px; border: none; border-radius: 999px;
+  background: rgba(255,255,255,.9); color: var(--sp-primary);
+  display: none; align-items: center; justify-content: center;
+  box-shadow: var(--sp-shadow); cursor: pointer;
+}
+.carousel-btn.prev { left: 14px; }
+.carousel-btn.next { right: 14px; }
+.space-hero[data-carousel-ready="true"] .carousel-btn { display: flex; }
 
 /* Layout */
 .detail-layout { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; align-items: start; }
@@ -121,15 +134,31 @@
   </a>
 
   <!-- Hero -->
-  <div class="space-hero">
+  <div class="space-hero" data-carousel>
+    {% for photo in space.photos.all %}
+      <div class="space-hero-slide {% if forloop.first %}active{% endif %}" data-carousel-slide>
+        <img src="{{ photo.image.url }}" alt="{{ photo.alt_text|default:space.name }}" loading="lazy">
+      </div>
+    {% empty %}
     {% if space.image and space.image.name %}
-      <img src="{{ space.image.url }}" alt="{{ space.name }}" loading="lazy">
+      <div class="space-hero-slide active" data-carousel-slide>
+        <img src="{{ space.image.url }}" alt="{{ space.name }}" loading="lazy">
+      </div>
     {% else %}
+      <div class="space-hero-slide active" data-carousel-slide>
       <div class="no-image">
         <i class="bi bi-building"></i>
         <span>Фото скоро появится</span>
       </div>
+      </div>
     {% endif %}
+    {% endfor %}
+    <button class="carousel-btn prev" type="button" data-carousel-prev aria-label="Предыдущее фото">
+      <i class="bi bi-chevron-left"></i>
+    </button>
+    <button class="carousel-btn next" type="button" data-carousel-next aria-label="Следующее фото">
+      <i class="bi bi-chevron-right"></i>
+    </button>
   </div>
 
   <!-- Layout -->
@@ -145,6 +174,11 @@
 
       <p class="section-title">Оснащение</p>
       <div class="amenity-list">
+        {% for amenity in space.amenities.all %}
+        <div class="amenity-badge has">
+          <i class="bi {{ amenity.icon|default:'bi-check2-circle' }}"></i> {{ amenity.name }}
+        </div>
+        {% empty %}
         <div class="amenity-badge {% if space.has_wifi %}has{% endif %}">
           <i class="bi bi-wifi"></i> Wi-Fi
         </div>
@@ -154,6 +188,7 @@
         <div class="amenity-badge {% if space.has_board %}has{% endif %}">
           <i class="bi bi-easel2"></i> Маркерная доска
         </div>
+        {% endfor %}
       </div>
 
       {% if space.description %}
@@ -191,4 +226,8 @@
   </div>
 </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/carousel.js' %}"></script>
 {% endblock %}

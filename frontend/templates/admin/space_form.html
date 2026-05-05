@@ -44,6 +44,14 @@
           {% endfor %}
         </div>
 
+        <div class="col-12">
+          <label class="adm-form-label" for="{{ form.category.id_for_label }}">Категория</label>
+          {{ form.category }}
+          {% for error in form.category.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
         <div class="col-md-6">
           <label class="adm-form-label" for="{{ form.capacity.id_for_label }}">Вместимость (чел.) *</label>
           {{ form.capacity }}
@@ -86,7 +94,38 @@
         </div>
 
         <div class="col-12">
+          <label class="adm-form-label" for="id_photos">Дополнительные фото</label>
+          <div id="photo-inputs" class="d-grid gap-2">
+            <input id="id_photos" class="adm-input" type="file" name="photos" accept="image/jpeg,image/png,image/webp" data-photo-input>
+            <input class="adm-input" type="file" name="photos" accept="image/jpeg,image/png,image/webp" data-photo-input>
+            <input class="adm-input" type="file" name="photos" accept="image/jpeg,image/png,image/webp" data-photo-input>
+          </div>
+          <button type="button" class="adm-btn adm-btn-ghost mt-2" data-add-photo>
+            <i class="bi bi-plus-lg"></i> Добавить ещё фото
+          </button>
+          {% if space and space.photos.exists %}
+            <div class="d-flex gap-2 flex-wrap" style="margin-top:10px;">
+              {% for photo in space.photos.all %}
+                <a href="{{ photo.image.url }}" target="_blank" style="display:block;">
+                  <img src="{{ photo.image.url }}" alt="{{ photo.alt_text|default:space.name }}" style="width:72px;height:48px;object-fit:cover;border-radius:4px;">
+                </a>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="col-12">
           <label class="adm-form-label">Удобства</label>
+          {% if form.amenities %}
+            <div class="d-flex gap-3 flex-wrap mb-2">
+              {% for choice in form.amenities %}
+                <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;">
+                  {{ choice.tag }}
+                  {{ choice.choice_label }}
+                </label>
+              {% endfor %}
+            </div>
+          {% endif %}
           <div class="d-flex gap-3 flex-wrap">
             <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;">
               {{ form.has_wifi }}
@@ -114,4 +153,21 @@
     </form>
   </div>
 </div>
+<script>
+(function () {
+  const addButton = document.querySelector('[data-add-photo]');
+  const inputs = document.getElementById('photo-inputs');
+  if (!addButton || !inputs) return;
+
+  addButton.addEventListener('click', function () {
+    const input = document.createElement('input');
+    input.className = 'adm-input';
+    input.type = 'file';
+    input.name = 'photos';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.setAttribute('data-photo-input', '');
+    inputs.appendChild(input);
+  });
+})();
+</script>
 {% endblock %}

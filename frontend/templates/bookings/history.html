@@ -19,6 +19,7 @@
                     <th>Помещение</th>
                     <th>Дата и время</th>
                     <th>Статус</th>
+                    <th>Оплата</th>
                     <th>Сумма</th>
                     <th>Действия</th>
                 </tr>
@@ -43,9 +44,20 @@
                             <span class="badge bg-danger">Отменено</span>
                         {% endif %}
                     </td>
+                    <td>
+                        {% if booking.payment %}
+                            <span class="badge {{ booking.payment.status_badge_class }}">
+                                {{ booking.payment.status_label }}
+                            </span>
+                        {% else %}
+                            <span class="badge payment-status-pending bg-warning text-dark">
+                                Ожидает оплаты
+                            </span>
+                        {% endif %}
+                    </td>
                     <td><strong>{{ booking.total_price }} ₽</strong></td>
                     <td>
-                        {% if booking.status == 'pending' %}
+                        {% if booking.status == 'pending' and not booking.payment.status == 'success' %}
                             <a href="{% url 'payments:pay_for_booking' booking.id %}" class="btn btn-sm btn-success me-1">
                                 Оплатить
                             </a>

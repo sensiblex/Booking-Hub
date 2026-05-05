@@ -10,10 +10,12 @@ class SpaceForm(forms.ModelForm):
         model = Space
         fields = (
             'name',
+            'category',
             'address',
             'capacity',
             'price_per_hour',
             'description',
+            'amenities',
             'image',
             'has_wifi',
             'has_projector',
@@ -28,6 +30,9 @@ class SpaceForm(forms.ModelForm):
                 'class': 'adm-input',
                 'placeholder': 'ул. Примерная, 10, офис 202',
             }),
+            'category': forms.Select(attrs={
+                'class': 'adm-input',
+            }),
             'capacity': forms.NumberInput(attrs={
                 'class': 'adm-input',
                 'min': 1,
@@ -41,6 +46,7 @@ class SpaceForm(forms.ModelForm):
                 'rows': 3,
                 'placeholder': 'Краткое описание помещения...',
             }),
+            'amenities': forms.CheckboxSelectMultiple(),
             'image': forms.FileInput(attrs={
                 'class': 'adm-input',
                 'accept': 'image/jpeg,image/png,image/webp',

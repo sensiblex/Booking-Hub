@@ -5,6 +5,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = (
+    BASE_DIR
+    if (BASE_DIR / 'frontend' / 'templates' / 'home.html').exists()
+    else BASE_DIR.parent
+)
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -47,7 +52,7 @@ MIDDLEWARE = [
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'frontend' / 'templates'],
+        'DIRS': [PROJECT_ROOT / 'frontend' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -66,7 +71,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Static files
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
-STATICFILES_DIRS = [BASE_DIR / 'frontend' / 'static']
+STATICFILES_DIRS = [PROJECT_ROOT / 'frontend' / 'static']
 
 # Media files (uploaded images, etc.)
 MEDIA_URL = '/media/'

@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from apps.spaces.models import Space
+from apps.spaces.models import Amenity, Category, Space
 
 
 SPACES = [
@@ -12,6 +12,8 @@ SPACES = [
         'has_projector': True,
         'has_board': True,
         'has_wifi': True,
+        'category': 'conference-hall',
+        'amenities': ['projector', 'board', 'wifi'],
     },
     {
         'name': 'Переговорная комната «Ньютон»',
@@ -22,6 +24,8 @@ SPACES = [
         'has_projector': False,
         'has_board': True,
         'has_wifi': True,
+        'category': 'meeting-room',
+        'amenities': ['board', 'wifi'],
     },
     {
         'name': 'Открытое пространство «Лофт»',
@@ -32,6 +36,8 @@ SPACES = [
         'has_projector': True,
         'has_board': False,
         'has_wifi': True,
+        'category': 'loft',
+        'amenities': ['projector', 'wifi'],
     },
     {
         'name': 'Кабинет «Соло»',
@@ -42,6 +48,8 @@ SPACES = [
         'has_projector': False,
         'has_board': False,
         'has_wifi': True,
+        'category': 'office',
+        'amenities': ['wifi'],
     },
     {
         'name': 'Тренинговый класс «Старт»',
@@ -52,6 +60,8 @@ SPACES = [
         'has_projector': True,
         'has_board': True,
         'has_wifi': True,
+        'category': 'training-room',
+        'amenities': ['projector', 'board', 'wifi'],
     },
     {
         'name': 'Подиум «Премьер»',
@@ -62,20 +72,54 @@ SPACES = [
         'has_projector': True,
         'has_board': False,
         'has_wifi': True,
+        'category': 'event-hall',
+        'amenities': ['projector', 'wifi'],
     },
 ]
+
+CATEGORIES = {
+    'meeting-room': 'Переговорная',
+    'conference-hall': 'Конференц-зал',
+    'loft': 'Лофт / Open space',
+    'office': 'Кабинет',
+    'training-room': 'Учебный класс',
+    'event-hall': 'Подиум / Зал',
+}
+
+AMENITIES = {
+    'wifi': ('Wi-Fi', 'bi-wifi'),
+    'projector': ('Проектор', 'bi-projector'),
+    'board': ('Маркерная доска', 'bi-easel2'),
+}
 
 
 class Command(BaseCommand):
     help = 'Заполнить БД тестовыми помещениями'
 
     def handle(self, *args, **kwargs):
+        categories = {
+            slug: Category.objects.get_or_create(slug=slug, defaults={'name': name})[0]
+            for slug, name in CATEGORIES.items()
+        }
+        amenities = {
+            slug: Amenity.objects.get_or_create(
+                slug=slug,
+                defaults={'name': name, 'icon': icon},
+            )[0]
+            for slug, (name, icon) in AMENITIES.items()
+        }
+
         created_count = 0
-        for data in SPACES:
+        for raw_data in SPACES:
+            data = raw_data.copy()
+            category_slug = data.pop('category')
+            amenity_slugs = data.pop('amenities')
+            data['category'] = categories[category_slug]
             obj, created = Space.objects.get_or_create(
                 name=data['name'],
                 defaults=data
             )
+            obj.amenities.set([amenities[slug] for slug in amenity_slugs])
             if created:
                 created_count += 1
                 self.stdout.write(f'  ✓ Создано: {obj.name}')

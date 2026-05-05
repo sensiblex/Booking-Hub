@@ -7,10 +7,11 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 
 try:
-    from apps.spaces.models import Space
+    from apps.spaces.models import Space, SpacePhoto
     from apps.spaces.forms import SpaceForm
 except ImportError:
     Space = None
+    SpacePhoto = None
     SpaceForm = None
 
 try:
@@ -61,7 +62,8 @@ def admin_space_create(request):
     form = SpaceForm(request.POST or None, request.FILES or None)
     if request.method == 'POST':
         if form.is_valid():
-            form.save()
+            space = form.save()
+            _create_space_photos(space, request.FILES.getlist('photos'))
             messages.success(request, 'Помещение успешно добавлено.')
             return redirect('admin_spaces')
         messages.error(request, 'Проверьте данные формы.')
@@ -78,7 +80,8 @@ def admin_space_edit(request, space_id):
     form = SpaceForm(request.POST or None, request.FILES or None, instance=space)
     if request.method == 'POST':
         if form.is_valid():
-            form.save()
+            space = form.save()
+            _create_space_photos(space, request.FILES.getlist('photos'))
             messages.success(request, 'Помещение обновлено.')
             return redirect('admin_spaces')
         messages.error(request, 'Проверьте данные формы.')
@@ -96,6 +99,19 @@ def admin_space_delete(request, space_id):
         space.delete()
         messages.success(request, 'Помещение удалено.')
     return redirect('admin_spaces')
+
+
+def _create_space_photos(space, uploaded_photos):
+    if SpacePhoto is None:
+        return
+
+    start_order = space.photos.count()
+    for index, photo in enumerate(uploaded_photos):
+        SpacePhoto.objects.create(
+            space=space,
+            image=photo,
+            sort_order=start_order + index,
+        )
 
 
 # ---- Bookings ----
