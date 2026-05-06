@@ -195,8 +195,7 @@
                   </button>
                 </form>
               {% endif %}
-              <form method="post" action="{% url 'admin_space_delete' s.id %}" style="display:inline;"
-                    onsubmit="return confirm('Удалить помещение «{{ s.name }}»?')">
+              <form method="post" action="{% url 'admin_space_delete' s.id %}" style="display:inline;">
                 {% csrf_token %}
                 <button type="submit" class="adm-btn adm-btn-sm adm-btn-danger">
                   <i class="bi bi-trash"></i>

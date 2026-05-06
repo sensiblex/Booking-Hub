@@ -146,13 +146,13 @@
                 <td>
                   <form method="post" action="{% url 'spaces:confirm_booking' booking.id %}" style="display:inline;">
                     {% csrf_token %}
-                    <button type="submit" class="btn-confirm" onclick="return confirm('Подтвердить бронирование?')">
+                    <button type="submit" class="btn-confirm">
                       <i class="bi bi-check-lg me-1"></i>Подтвердить
                     </button>
                   </form>
                   <form method="post" action="{% url 'spaces:decline_booking' booking.id %}" style="display:inline;" class="ms-1">
                     {% csrf_token %}
-                    <button type="submit" class="btn-decline" onclick="return confirm('Отклонить бронирование?')">
+                    <button type="submit" class="btn-decline">
                       <i class="bi bi-x-lg me-1"></i>Отклонить
                     </button>
                   </form>

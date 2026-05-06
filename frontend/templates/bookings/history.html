@@ -15,7 +15,7 @@
             {% if bookings %}
             <form method="post" action="{% url 'bookings:clear_history' %}" style="display:inline;">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Удалить все завершённые и отменённые бронирования? Активные бронирования будут сохранены.')">
+                <button type="submit" class="btn btn-outline-danger btn-sm">
                     <i class="bi bi-trash3 me-1"></i>Очистить историю
                 </button>
             </form>
@@ -89,8 +89,7 @@
                         {% if booking.status == 'pending' or booking.status == 'awaiting_confirmation' or booking.status == 'confirmed' %}
                             <form method="post" action="{% url 'bookings:cancel' booking.id %}" style="display:inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                        onclick="return confirm('Отменить бронь?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
                                     Отменить
                                 </button>
                             </form>
