@@ -46,8 +46,20 @@ def filter_spaces(queryset, params):
     if price_max is not None:
         queryset = queryset.filter(price_per_hour__lte=price_max)
 
+    AMENITY_TO_LEGACY = {
+        'wifi': 'has_wifi',
+        'projector': 'has_projector',
+        'board': 'has_board',
+    }
+
     for amenity_slug in _get_list(params, 'amenities'):
-        queryset = queryset.filter(amenities__slug=amenity_slug)
+        legacy_field = AMENITY_TO_LEGACY.get(amenity_slug)
+        if legacy_field:
+            queryset = queryset.filter(
+                Q(amenities__slug=amenity_slug) | Q(**{legacy_field: True})
+            )
+        else:
+            queryset = queryset.filter(amenities__slug=amenity_slug)
 
     ordering = {
         'price_asc': 'price_per_hour',

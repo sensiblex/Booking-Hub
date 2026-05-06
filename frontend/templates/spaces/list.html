@@ -506,7 +506,8 @@
 
   // ── chip toggle ──
   elChips.forEach(chip => {
-    chip.addEventListener('click', () => {
+    chip.addEventListener('click', (e) => {
+      e.preventDefault();
       chip.classList.toggle('active');
       const checkbox = chip.querySelector('input[type="checkbox"]');
       if (checkbox) checkbox.checked = chip.classList.contains('active');
