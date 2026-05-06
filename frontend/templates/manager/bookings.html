@@ -40,10 +40,14 @@
                     <td>
                         {% if booking.status == 'confirmed' %}
                             <span class="badge bg-success">Подтверждено</span>
+                        {% elif booking.status == 'awaiting_confirmation' %}
+                            <span class="badge bg-info">Ожидает подтверждения</span>
                         {% elif booking.status == 'pending' %}
-                            <span class="badge bg-warning">Ожидает подтверждения</span>
+                            <span class="badge bg-warning">Ожидает оплаты</span>
                         {% elif booking.status == 'cancelled' %}
                             <span class="badge bg-danger">Отменено</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ booking.get_status_display }}</span>
                         {% endif %}
                     </td>
                     <td><strong>{{ booking.total_price }} ₽</strong></td>

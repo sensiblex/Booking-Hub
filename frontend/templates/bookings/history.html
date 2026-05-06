@@ -38,8 +38,10 @@
                     <td>
                         {% if booking.status == 'confirmed' %}
                             <span class="badge bg-success">Подтверждено</span>
+                        {% elif booking.status == 'awaiting_confirmation' %}
+                            <span class="badge bg-info">Ожидает подтверждения</span>
                         {% elif booking.status == 'pending' %}
-                            <span class="badge bg-warning">Ожидает</span>
+                            <span class="badge bg-warning">Ожидает оплаты</span>
                         {% elif booking.status == 'cancelled' %}
                             <span class="badge bg-danger">Отменено</span>
                         {% endif %}
@@ -62,7 +64,7 @@
                                 Оплатить
                             </a>
                         {% endif %}
-                        {% if booking.status == 'pending' or booking.status == 'confirmed' %}
+                        {% if booking.status == 'pending' or booking.status == 'awaiting_confirmation' or booking.status == 'confirmed' %}
                             <form method="post" action="{% url 'bookings:cancel' booking.id %}" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-outline-danger"

@@ -43,7 +43,7 @@ def calculate_total_price(space, check_in, check_out):
 def get_overlapping_bookings(space, check_in, check_out, exclude_booking_id=None):
     bookings = Booking.objects.filter(
         space=space,
-        status__in=[Booking.STATUS_PENDING, Booking.STATUS_CONFIRMED],
+        status__in=[Booking.STATUS_PENDING, Booking.STATUS_AWAITING_CONFIRMATION, Booking.STATUS_CONFIRMED],
         check_in__lt=check_out,
         check_out__gt=check_in,
     )

@@ -27,8 +27,8 @@ class PaymentStatusTests(TestCase):
         self.booking = Booking.objects.create(
             user=self.user,
             space=self.space,
-            start_time=timezone.now() + timedelta(days=1),
-            end_time=timezone.now() + timedelta(days=1, hours=2),
+            check_in=timezone.now() + timedelta(days=1),
+            check_out=timezone.now() + timedelta(days=1, hours=2),
             total_price=1800,
         )
 
@@ -37,6 +37,17 @@ class PaymentStatusTests(TestCase):
 
         self.assertEqual(payment.status, Payment.STATUS_PENDING)
         self.assertEqual(payment.status_label, 'Ожидает оплаты')
+
+    def test_payment_sets_booking_awaiting_confirmation(self):
+        Payment.objects.create_for_booking(self.booking)
+
+        response = self.client.post(
+            reverse('payments:pay_for_booking', args=[self.booking.id]),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.status, Booking.STATUS_AWAITING_CONFIRMATION)
 
     def test_success_page_marks_booking_payment_success(self):
         payment = Payment.objects.create_for_booking(self.booking)
@@ -86,8 +97,8 @@ class PaymentStatusTests(TestCase):
         failed_booking = Booking.objects.create(
             user=self.user,
             space=self.space,
-            start_time=timezone.now() + timedelta(days=2),
-            end_time=timezone.now() + timedelta(days=2, hours=2),
+            check_in=timezone.now() + timedelta(days=2),
+            check_out=timezone.now() + timedelta(days=2, hours=2),
             total_price=1800,
         )
         Payment.objects.create(

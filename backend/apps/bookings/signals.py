@@ -25,11 +25,16 @@ def booking_status_changed(sender, instance, created, **kwargs):
         return
     
     if old_booking.status != instance.status:
-        if instance.status == Booking.STATUS_CONFIRMED:
+        if instance.status == Booking.STATUS_AWAITING_CONFIRMATION:
+            if settings.DEBUG:
+                print(f'Booking #{instance.id} awaiting confirmation, sending payment email...')
+            send_payment_success_email(instance)
+
+        elif instance.status == Booking.STATUS_CONFIRMED:
             if settings.DEBUG:
                 print(f'Booking #{instance.id} confirmed, sending email...')
             send_booking_confirmation_email(instance)
-        
+
         elif instance.status == Booking.STATUS_CANCELLED:
             if settings.DEBUG:
                 print(f'Booking #{instance.id} cancelled, sending email...')

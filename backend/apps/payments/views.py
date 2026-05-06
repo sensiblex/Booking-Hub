@@ -30,13 +30,10 @@ def payment_pay(request, booking_id=None):
         payment = Payment.objects.create_for_booking(booking)
 
     if request.method == 'POST':
-        # Фантомная оплата: подтверждаем бронирование
+        # Фантомная оплата: переводим в ожидание подтверждения
         if booking.id and isinstance(booking, Booking):
-            booking.status = Booking.STATUS_CONFIRMED
+            booking.status = Booking.STATUS_AWAITING_CONFIRMATION
             booking.save(update_fields=['status', 'updated_at'])
-            # Отправляем email об успешной оплате
-            from apps.notifications.services import send_payment_success_email
-            send_payment_success_email(booking)
         payment_query = f'&payment_id={payment.id}' if payment else ''
         return redirect(reverse('payments:success') + f'?booking_id={booking.id}{payment_query}')
 

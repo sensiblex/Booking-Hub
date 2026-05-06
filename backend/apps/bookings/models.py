@@ -8,11 +8,13 @@ from apps.spaces.models import Space
 
 class Booking(models.Model):
     STATUS_PENDING = 'pending'
+    STATUS_AWAITING_CONFIRMATION = 'awaiting_confirmation'
     STATUS_CONFIRMED = 'confirmed'
     STATUS_CANCELLED = 'cancelled'
 
     STATUS_CHOICES = [
-        (STATUS_PENDING, 'Ожидает'),
+        (STATUS_PENDING, 'Ожидает оплаты'),
+        (STATUS_AWAITING_CONFIRMATION, 'Ожидает подтверждения'),
         (STATUS_CONFIRMED, 'Подтверждено'),
         (STATUS_CANCELLED, 'Отменено'),
     ]
@@ -32,7 +34,7 @@ class Booking(models.Model):
     check_in = models.DateTimeField(verbose_name='Заезд')
     check_out = models.DateTimeField(verbose_name='Выезд')
     status = models.CharField(
-        max_length=20,
+        max_length=25,
         choices=STATUS_CHOICES,
         default=STATUS_PENDING,
         verbose_name='Статус',
