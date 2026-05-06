@@ -32,16 +32,14 @@
                 </button>
 
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
+                    <!-- Правая часть навбара -->
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item me-2">
                             <a class="nav-link" href="{% url 'spaces:list' %}">
                                 <i class="bi bi-grid-3x3-gap me-1"></i>Каталог помещений
                             </a>
                         </li>
-                    </ul>
 
-                    <!-- Правая часть навбара -->
-                    <ul class="navbar-nav align-items-center">
                         {% if user.is_authenticated %}
                             {% if user.is_staff or user.role == 'administrator' %}
                             <li class="nav-item me-2">
