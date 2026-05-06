@@ -5,7 +5,6 @@ from django.db.models import Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from datetime import timedelta
 
 from apps.spaces.models import Space
 
@@ -76,12 +75,6 @@ def check_booking_availability(request):
 
 @login_required(login_url='/users/login/')
 def booking_history(request):
-    cutoff = timezone.now() - timedelta(days=30)
-    Booking.objects.filter(
-        user=request.user,
-        status__in=[Booking.STATUS_CANCELLED, Booking.STATUS_COMPLETED],
-        check_out__lt=cutoff,
-    ).delete()
     Booking.objects.filter(
         user=request.user,
         status__in=[Booking.STATUS_CONFIRMED, Booking.STATUS_AWAITING_CONFIRMATION],
@@ -109,12 +102,25 @@ def booking_history(request):
 @login_required(login_url='/users/login/')
 def clear_booking_history(request):
     if request.method == 'POST':
-        deleted, _ = Booking.objects.filter(
+        Booking.objects.filter(
             user=request.user,
-            status__in=[Booking.STATUS_CANCELLED, Booking.STATUS_CONFIRMED],
+            status__in=[Booking.STATUS_CONFIRMED, Booking.STATUS_AWAITING_CONFIRMATION],
+            check_out__lt=timezone.now(),
+        ).update(status=Booking.STATUS_COMPLETED)
+
+        deleted_cancelled, _ = Booking.objects.filter(
+            user=request.user,
+            status=Booking.STATUS_CANCELLED,
+        ).delete()
+
+        deleted_completed, _ = Booking.objects.filter(
+            user=request.user,
+            status=Booking.STATUS_COMPLETED,
             check_out__lt=timezone.now(),
         ).delete()
-        messages.success(request, f'Удалено {deleted} завершённых бронирований.')
+
+        total_deleted = deleted_cancelled + deleted_completed
+        messages.success(request, f'Удалено {total_deleted} бронирований (завершённых и отменённых).')
     return redirect('bookings:history')
 
 
