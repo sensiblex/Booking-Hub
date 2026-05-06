@@ -83,27 +83,27 @@ class UserSpaceSubmissionForm(forms.ModelForm):
         )
         widgets = {
             'name': forms.TextInput(attrs={
-                'class': 'form-input',
+                'class': 'form-control',
                 'placeholder': 'Переговорная №1',
             }),
             'address': forms.TextInput(attrs={
-                'class': 'form-input',
+                'class': 'form-control',
                 'placeholder': 'ул. Примерная, 10, офис 202',
             }),
-            'category': forms.Select(attrs={'class': 'form-input'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
             'capacity': forms.NumberInput(attrs={
-                'class': 'form-input',
+                'class': 'form-control',
                 'min': 1,
             }),
             'price_per_hour': forms.NumberInput(attrs={
-                'class': 'form-input',
+                'class': 'form-control',
                 'min': 0,
             }),
             'description': forms.Textarea(attrs={
-                'class': 'form-input',
+                'class': 'form-control',
                 'rows': 4,
                 'placeholder': 'Краткое описание помещения...',
             }),
             'amenities': forms.CheckboxSelectMultiple(),
-            'image': forms.FileInput(attrs={'accept': 'image/jpeg,image/png,image/webp'}),
+            'image': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/jpeg,image/png,image/webp'}),
         }

@@ -4,190 +4,198 @@
 
 {% block extra_css %}
 <style>
-:root {
-  --sp-primary:       #01696f;
-  --sp-primary-light: #e6f2f2;
-  --sp-text:          #1a1a1a;
-  --sp-muted:         #6b7280;
-  --sp-border:        #e5e7eb;
-  --sp-surface:       #ffffff;
-  --sp-bg:            #f8f9fa;
+.space-submit-page {
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding: 40px 0;
 }
-.spaces-page { background: var(--sp-bg); min-height: 100vh; }
-.page-header { padding: 2rem 0 1.5rem; }
-.page-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--sp-text); margin: 0 0 .25rem; }
-.page-header .subtitle { color: var(--sp-muted); font-size: .95rem; }
-
-.form-card {
-  background: var(--sp-surface);
-  border: 1.5px solid var(--sp-border);
-  border-radius: 14px;
-  padding: 2rem;
+.space-submit-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    max-width: 680px;
+    margin: 0 auto;
 }
-.form-section { margin-bottom: 2rem; }
-.form-section:last-child { margin-bottom: 0; }
-.section-title {
-  font-size: .95rem; font-weight: 700; color: var(--sp-text);
-  margin-bottom: 1rem; display: flex; align-items: center; gap: .5rem;
+.space-submit-header {
+    background: linear-gradient(135deg, #01696f, #0c4e54);
+    color: white;
+    padding: 2rem 2.5rem;
 }
-.section-title i { color: var(--sp-primary); font-size: 1.1rem; }
-
-.form-label-custom {
-  display: block; font-size: .82rem; font-weight: 600;
-  color: var(--sp-text); margin-bottom: .35rem;
+.space-submit-header h4 {
+    margin: 0 0 8px 0;
+    font-weight: 700;
 }
-.form-input {
-  width: 100%; padding: .6rem .85rem;
-  border: 1.5px solid var(--sp-border); border-radius: 8px;
-  font-size: .9rem; color: var(--sp-text); background: var(--sp-surface);
-  transition: border-color var(--sp-transition, .18s), box-shadow var(--sp-transition, .18s);
+.space-submit-header p {
+    margin: 0;
+    opacity: 0.85;
+    font-size: 0.9rem;
 }
-.form-input:focus {
-  border-color: var(--sp-primary); box-shadow: 0 0 0 3px rgba(1,105,111,.1);
-  outline: none;
+.space-submit-body {
+    padding: 2.5rem;
 }
-textarea.form-input { resize: vertical; min-height: 80px; }
-
-.amenity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .6rem; }
+.form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+.form-control {
+    height: 48px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 0 16px;
+    font-size: 1rem;
+}
+textarea.form-control {
+    height: auto;
+    min-height: 100px;
+}
+.form-control:focus {
+    border-color: #01696f;
+    box-shadow: 0 0 0 4px rgba(1, 105, 111, 0.15);
+    outline: none;
+}
+.amenity-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.6rem;
+}
 .amenity-option {
-  display: flex; align-items: center; gap: .5rem;
-  padding: .55rem .75rem; border: 1.5px solid var(--sp-border);
-  border-radius: 8px; cursor: pointer; transition: all .18s;
-  font-size: .85rem; color: var(--sp-muted); background: var(--sp-surface);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-size: 0.9rem;
+    color: #6b7280;
 }
-.amenity-option:hover { border-color: #9ca3af; color: var(--sp-text); }
+.amenity-option:hover {
+    border-color: #9ca3af;
+    color: #374151;
+}
 .amenity-option input[type="checkbox"] {
-  accent-color: var(--sp-primary); width: 16px; height: 16px;
+    accent-color: #01696f;
+    width: 16px;
+    height: 16px;
 }
-.amenity-option input[type="checkbox"]:checked + span { color: var(--sp-primary); font-weight: 600; }
-
-.file-upload {
-  border: 2px dashed var(--sp-border); border-radius: 12px;
-  padding: 2rem; text-align: center; cursor: pointer;
-  transition: border-color .18s, background .18s;
+.amenity-option input[type="checkbox"]:checked + span {
+    color: #01696f;
+    font-weight: 600;
 }
-.file-upload:hover { border-color: var(--sp-primary); background: var(--sp-primary-light); }
-.file-upload input[type="file"] { display: none; }
-.file-upload i { font-size: 2rem; color: var(--sp-muted); display: block; margin-bottom: .5rem; }
-.file-upload p { font-size: .85rem; color: var(--sp-muted); margin: 0; }
-.file-upload .formats { font-size: .75rem; color: #9ca3af; margin-top: .25rem; }
-
-.btn-submit {
-  padding: .7rem 2rem; border: none; border-radius: 10px;
-  background: var(--sp-primary); color: #fff; font-size: .95rem;
-  font-weight: 700; cursor: pointer; transition: background .18s, transform .18s;
+.btn-submit-space {
+    height: 54px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    border-radius: 12px;
+    background: #01696f;
+    color: #fff;
+    border: none;
+    transition: background 0.18s, transform 0.18s;
 }
-.btn-submit:hover { background: #0c4e54; transform: translateY(-1px); }
+.btn-submit-space:hover {
+    background: #0c4e54;
+    transform: translateY(-1px);
+    color: #fff;
+}
+.back-link-space {
+    height: 54px;
+    font-size: 1rem;
+    border-radius: 12px;
+    color: #64748b;
+    font-weight: 500;
+}
+.back-link-space:hover {
+    color: #01696f;
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="spaces-page">
-<div class="container-fluid" style="max-width:840px; padding: 0 1.5rem;">
+<div class="space-submit-page">
+    <div class="container">
+        <div class="space-submit-card">
 
-  <div class="page-header">
-    <h1>Добавить помещение</h1>
-    <p class="subtitle">Заполните информацию о помещении. После отправки оно попадёт на модерацию.</p>
-  </div>
+            <div class="space-submit-header">
+                <h4>Добавить помещение</h4>
+                <p>Заполните информацию. После отправки помещение попадёт на модерацию.</p>
+            </div>
 
-  <div class="form-card">
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      {{ form.non_field_errors }}
+            <div class="space-submit-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
 
-      <!-- Основная информация -->
-      <div class="form-section">
-        <div class="section-title"><i class="bi bi-info-circle"></i> Основная информация</div>
+                    <div class="mb-4">
+                        <label class="form-label" for="{{ form.name.id_for_label }}">Название</label>
+                        {{ form.name }}
+                        {{ form.name.errors }}
+                    </div>
 
-        <div class="mb-3">
-          <label class="form-label-custom" for="{{ form.name.id_for_label }}">Название</label>
-          {{ form.name }}
-          {{ form.name.errors }}
+                    <div class="mb-4">
+                        <label class="form-label" for="{{ form.address.id_for_label }}">Адрес</label>
+                        {{ form.address }}
+                        {{ form.address.errors }}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label" for="{{ form.category.id_for_label }}">Категория</label>
+                        {{ form.category }}
+                        {{ form.category.errors }}
+                    </div>
+
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ form.capacity.id_for_label }}">Вместимость (чел.)</label>
+                            {{ form.capacity }}
+                            {{ form.capacity.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ form.price_per_hour.id_for_label }}">Цена за час (₽)</label>
+                            {{ form.price_per_hour }}
+                            {{ form.price_per_hour.errors }}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label" for="{{ form.description.id_for_label }}">Описание</label>
+                        {{ form.description }}
+                        {{ form.description.errors }}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label" for="{{ form.image.id_for_label }}">Фото</label>
+                        {{ form.image }}
+                        <small class="text-muted d-block mt-1">JPG, PNG, WebP — до 5 МБ</small>
+                        {{ form.image.errors }}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Удобства</label>
+                        <div class="amenity-grid">
+                            {% for checkbox in form.amenities %}
+                                <label class="amenity-option">
+                                    {{ checkbox.tag }}
+                                    <span>{{ checkbox.choice_label }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {{ form.amenities.errors }}
+                    </div>
+
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-submit-space">
+                            Отправить на модерацию
+                        </button>
+                        <a href="{% url 'spaces:my_spaces' %}" class="btn btn-outline-secondary back-link-space text-center">
+                            ← Назад к моим помещениям
+                        </a>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <div class="mb-3">
-          <label class="form-label-custom" for="{{ form.address.id_for_label }}">Адрес</label>
-          {{ form.address }}
-          {{ form.address.errors }}
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label-custom" for="{{ form.category.id_for_label }}">Категория</label>
-          {{ form.category }}
-          {{ form.category.errors }}
-        </div>
-      </div>
-
-      <div class="form-section">
-        <div class="section-title"><i class="bi bi-gear"></i> Параметры</div>
-
-        <div class="row g-3 mb-3">
-          <div class="col-md-6">
-            <label class="form-label-custom" for="{{ form.capacity.id_for_label }}">Вместимость (чел.)</label>
-            {{ form.capacity }}
-            {{ form.capacity.errors }}
-          </div>
-          <div class="col-md-6">
-            <label class="form-label-custom" for="{{ form.price_per_hour.id_for_label }}">Цена за час (₽)</label>
-            {{ form.price_per_hour }}
-            {{ form.price_per_hour.errors }}
-          </div>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label-custom" for="{{ form.description.id_for_label }}">Описание</label>
-          {{ form.description }}
-          {{ form.description.errors }}
-        </div>
-      </div>
-
-      <div class="form-section">
-        <div class="section-title"><i class="bi bi-image"></i> Фото</div>
-        <label class="file-upload" id="fileDrop">
-          <i class="bi bi-cloud-arrow-up"></i>
-          <p>Нажмите для выбора файла или перетащите сюда</p>
-          <p class="formats">JPG, PNG, WebP — до 5 МБ</p>
-          {{ form.image }}
-          <span id="fileInfo"></span>
-        </label>
-        {{ form.image.errors }}
-      </div>
-
-      <div class="form-section">
-        <div class="section-title"><i class="bi bi-check2-circle"></i> Удобства</div>
-        <div class="amenity-grid">
-          {% for checkbox in form.amenities %}
-            <label class="amenity-option">
-              {{ checkbox.tag }}
-              <span>{{ checkbox.choice_label }}</span>
-            </label>
-          {% endfor %}
-        </div>
-        {{ form.amenities.errors }}
-      </div>
-
-      <div class="d-flex justify-content-end mt-4 pt-2">
-        <button type="submit" class="btn-submit">
-          <i class="bi bi-send me-2"></i>Отправить на модерацию
-        </button>
-      </div>
-    </form>
-  </div>
-
+    </div>
 </div>
-</div>
-
-<script>
-(function() {
-  var fileInput = document.querySelector('#fileDrop input[type="file"]');
-  var fileInfo = document.getElementById('fileInfo');
-  if (fileInput) {
-    fileInput.addEventListener('change', function() {
-      if (fileInput.files.length) {
-        fileInfo.textContent = 'Выбран: ' + fileInput.files[0].name;
-      }
-    });
-  }
-})();
-</script>
 {% endblock %}
