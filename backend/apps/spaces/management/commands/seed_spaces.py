@@ -1,8 +1,9 @@
 from django.core.management.base import BaseCommand
+from django.contrib.auth import get_user_model
 from apps.spaces.models import Amenity, Category, Space
 
 
-SPACES = [
+APPROVED_SPACES = [
     {
         'name': 'Конференц-зал «Атлас»',
         'address': 'ул. Ленина, 12, эт. 3',
@@ -14,6 +15,7 @@ SPACES = [
         'has_wifi': True,
         'category': 'conference-hall',
         'amenities': ['projector', 'board', 'wifi'],
+        'moderation_status': Space.MODERATION_APPROVED,
     },
     {
         'name': 'Переговорная комната «Ньютон»',
@@ -26,6 +28,7 @@ SPACES = [
         'has_wifi': True,
         'category': 'meeting-room',
         'amenities': ['board', 'wifi'],
+        'moderation_status': Space.MODERATION_APPROVED,
     },
     {
         'name': 'Открытое пространство «Лофт»',
@@ -38,6 +41,7 @@ SPACES = [
         'has_wifi': True,
         'category': 'loft',
         'amenities': ['projector', 'wifi'],
+        'moderation_status': Space.MODERATION_APPROVED,
     },
     {
         'name': 'Кабинет «Соло»',
@@ -50,6 +54,7 @@ SPACES = [
         'has_wifi': True,
         'category': 'office',
         'amenities': ['wifi'],
+        'moderation_status': Space.MODERATION_APPROVED,
     },
     {
         'name': 'Тренинговый класс «Старт»',
@@ -62,6 +67,7 @@ SPACES = [
         'has_wifi': True,
         'category': 'training-room',
         'amenities': ['projector', 'board', 'wifi'],
+        'moderation_status': Space.MODERATION_APPROVED,
     },
     {
         'name': 'Подиум «Премьер»',
@@ -74,6 +80,38 @@ SPACES = [
         'has_wifi': True,
         'category': 'event-hall',
         'amenities': ['projector', 'wifi'],
+        'moderation_status': Space.MODERATION_APPROVED,
+    },
+]
+
+PENDING_SUBMISSIONS = [
+    {
+        'name': 'Тестовая заявка «Север»',
+        'address': 'ул. Тверская, 18',
+        'capacity': 12,
+        'price_per_hour': 1200,
+        'description': 'Тестовая пользовательская заявка на модерацию.',
+        'has_projector': True,
+        'has_board': False,
+        'has_wifi': True,
+        'category': 'meeting-room',
+        'amenities': ['projector', 'wifi'],
+        'moderation_status': Space.MODERATION_PENDING,
+        'submitted_by': 'applicant_one',
+    },
+    {
+        'name': 'Тестовая заявка «Юг»',
+        'address': 'пр. Мира, 45',
+        'capacity': 25,
+        'price_per_hour': 1900,
+        'description': 'Еще одна заявка для проверки интерфейса модерации.',
+        'has_projector': False,
+        'has_board': True,
+        'has_wifi': True,
+        'category': 'training-room',
+        'amenities': ['board', 'wifi'],
+        'moderation_status': Space.MODERATION_PENDING,
+        'submitted_by': 'applicant_two',
     },
 ]
 
@@ -97,6 +135,7 @@ class Command(BaseCommand):
     help = 'Заполнить БД тестовыми помещениями'
 
     def handle(self, *args, **kwargs):
+        User = get_user_model()
         categories = {
             slug: Category.objects.get_or_create(slug=slug, defaults={'name': name})[0]
             for slug, name in CATEGORIES.items()
@@ -108,9 +147,21 @@ class Command(BaseCommand):
             )[0]
             for slug, (name, icon) in AMENITIES.items()
         }
+        applicants = {
+            username: User.objects.get_or_create(
+                username=username,
+                defaults={
+                    'email': f'{username}@example.com',
+                    'role': 'client',
+                },
+            )[0]
+            for username in ('applicant_one', 'applicant_two')
+        }
 
-        created_count = 0
-        for raw_data in SPACES:
+        created_approved_count = 0
+        created_pending_count = 0
+
+        for raw_data in APPROVED_SPACES:
             data = raw_data.copy()
             category_slug = data.pop('category')
             amenity_slugs = data.pop('amenities')
@@ -121,8 +172,31 @@ class Command(BaseCommand):
             )
             obj.amenities.set([amenities[slug] for slug in amenity_slugs])
             if created:
-                created_count += 1
-                self.stdout.write(f'  ✓ Создано: {obj.name}')
+                created_approved_count += 1
+                self.stdout.write(f'  ✓ Создано объявление: {obj.name}')
             else:
-                self.stdout.write(f'  — Уже есть: {obj.name}')
-        self.stdout.write(self.style.SUCCESS(f'\nГотово. Создано {created_count} помещений.'))
+                self.stdout.write(f'  — Уже есть объявление: {obj.name}')
+
+        for raw_data in PENDING_SUBMISSIONS:
+            data = raw_data.copy()
+            category_slug = data.pop('category')
+            amenity_slugs = data.pop('amenities')
+            submitted_by_username = data.pop('submitted_by')
+            data['category'] = categories[category_slug]
+            data['submitted_by'] = applicants[submitted_by_username]
+            obj, created = Space.objects.get_or_create(
+                name=data['name'],
+                defaults=data,
+            )
+            obj.amenities.set([amenities[slug] for slug in amenity_slugs])
+            if created:
+                created_pending_count += 1
+                self.stdout.write(f'  ✓ Создана заявка: {obj.name}')
+            else:
+                self.stdout.write(f'  — Уже есть заявка: {obj.name}')
+
+        self.stdout.write(self.style.SUCCESS(
+            '\nГотово. Создано: '
+            f'{created_approved_count} подтверждённых объявлений и '
+            f'{created_pending_count} заявок на модерацию.'
+        ))

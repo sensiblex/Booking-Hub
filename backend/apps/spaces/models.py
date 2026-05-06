@@ -78,6 +78,15 @@ class Amenity(models.Model):
 
 
 class Space(models.Model):
+    MODERATION_PENDING = "pending"
+    MODERATION_APPROVED = "approved"
+    MODERATION_REJECTED = "rejected"
+    MODERATION_STATUS_CHOICES = (
+        (MODERATION_PENDING, "На модерации"),
+        (MODERATION_APPROVED, "Одобрено"),
+        (MODERATION_REJECTED, "Отклонено"),
+    )
+
     name = models.CharField(max_length=200, verbose_name="Название")
     category = models.ForeignKey(
         Category,
@@ -117,6 +126,22 @@ class Space(models.Model):
         ]
     )
 
+    submitted_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="submitted_spaces",
+        verbose_name="Кем добавлено",
+    )
+    moderation_status = models.CharField(
+        max_length=20,
+        choices=MODERATION_STATUS_CHOICES,
+        default=MODERATION_APPROVED,
+        db_index=True,
+        verbose_name="Статус модерации",
+    )
+    moderation_note = models.TextField(blank=True, verbose_name="Комментарий модерации")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -125,6 +150,21 @@ class Space(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         _process_space_image(self.image)
+
+    @property
+    def display_amenities(self):
+        amenities = list(self.amenities.all())
+        if amenities:
+            return amenities
+
+        fallback = []
+        if self.has_wifi:
+            fallback.append({'name': 'Wi-Fi', 'icon': 'bi-wifi'})
+        if self.has_projector:
+            fallback.append({'name': 'Проектор', 'icon': 'bi-projector'})
+        if self.has_board:
+            fallback.append({'name': 'Маркерная доска', 'icon': 'bi-easel2'})
+        return fallback
 
     class Meta:
         verbose_name = "Помещение"

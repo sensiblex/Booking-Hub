@@ -28,13 +28,92 @@
           <input type="text" name="q" value="{{ request.GET.q }}" class="adm-input" placeholder="Поиск..." style="border-radius:0 10px 10px 0;">
         </div>
       </div>
-      <div class="col-md-4 d-flex gap-2">
+      <div class="col-md-2">
+        <label class="adm-form-label">Модерация</label>
+        <select name="moderation_status" class="adm-input">
+          <option value="">Все</option>
+          <option value="pending" {% if request.GET.moderation_status == 'pending' %}selected{% endif %}>На модерации</option>
+          <option value="approved" {% if request.GET.moderation_status == 'approved' %}selected{% endif %}>Одобрено</option>
+          <option value="rejected" {% if request.GET.moderation_status == 'rejected' %}selected{% endif %}>Отклонено</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-2">
         <button type="submit" class="adm-btn adm-btn-primary w-100">Найти</button>
         <a href="{% url 'admin_spaces' %}" class="adm-btn adm-btn-ghost"><i class="bi bi-x-lg"></i></a>
       </div>
     </form>
   </div>
 </div>
+
+{% if pending_spaces %}
+<div class="adm-card mb-4">
+  <div class="adm-card-header">
+    <span><i class="bi bi-hourglass-split"></i> Заявки на модерацию ({{ pending_spaces|length }})</span>
+  </div>
+  <div class="adm-card-body">
+    <div class="d-grid gap-3">
+      {% for s in pending_spaces %}
+      <div style="border:1px solid #e2e8f0;border-radius:12px;padding:14px;">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+          <div>
+            <div class="fw-semibold" style="font-size:16px;">{{ s.name }}</div>
+            <div class="text-muted" style="font-size:13px;">{{ s.address }}</div>
+            <div class="text-muted mt-1" style="font-size:12px;">
+              Автор: <strong>{{ s.submitted_by.username|default:'не указан' }}</strong> ·
+              Дата: {{ s.created_at|date:"d.m.Y H:i" }}
+            </div>
+          </div>
+          {% if s.image %}
+          <img src="{{ s.image.url }}" alt="{{ s.name }}" style="width:120px;height:80px;object-fit:cover;border-radius:8px;">
+          {% endif %}
+        </div>
+
+        {% if s.description %}
+        <p class="mb-2 mt-2" style="font-size:13px;color:#334155;">{{ s.description }}</p>
+        {% endif %}
+
+        <div class="d-flex gap-1 flex-wrap mb-2">
+          {% for amenity in s.display_amenities %}
+            <span class="adm-badge adm-badge-info">
+              {% if amenity.icon %}<i class="bi {{ amenity.icon }}"></i>{% endif %} {{ amenity.name }}
+            </span>
+          {% empty %}
+            <span class="adm-badge adm-badge-muted">Удобства не указаны</span>
+          {% endfor %}
+        </div>
+
+        <div class="d-flex gap-2">
+          <form method="post" action="{% url 'admin_space_moderate' s.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="approve">
+            <button type="submit" class="adm-btn adm-btn-success">
+              <i class="bi bi-check-lg"></i> Одобрить
+            </button>
+          </form>
+          <form method="post" action="{% url 'admin_space_moderate' s.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="reject">
+            <button type="submit" class="adm-btn adm-btn-danger">
+              <i class="bi bi-x-lg"></i> Отклонить
+            </button>
+          </form>
+          <form method="post" action="{% url 'admin_space_moderate' s.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="pending">
+            <button type="submit" class="adm-btn adm-btn-outline">
+              <i class="bi bi-hourglass-split"></i> На модерацию
+            </button>
+          </form>
+          <a href="{% url 'admin_space_edit' s.id %}" class="adm-btn adm-btn-outline">
+            <i class="bi bi-pencil"></i> Редактировать
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
 
 <!-- Table -->
 <div class="adm-card">
@@ -48,6 +127,7 @@
           <th>Адрес</th>
           <th>Вместимость</th>
           <th>Цена/час</th>
+          <th>Модерация</th>
           <th>Удобства</th>
           <th style="text-align:right;padding-right:20px;">Действия</th>
         </tr>
@@ -72,17 +152,57 @@
           <td style="font-size:13px;">{{ s.capacity }} чел.</td>
           <td style="font-size:13px;">{{ s.price_per_hour }} ₽</td>
           <td>
+            {% if s.moderation_status == 'approved' %}
+              <span class="adm-badge adm-badge-success">Одобрено</span>
+            {% elif s.moderation_status == 'rejected' %}
+              <span class="adm-badge adm-badge-danger">Отклонено</span>
+            {% else %}
+              <span class="adm-badge adm-badge-warning">На модерации</span>
+            {% endif %}
+          </td>
+          <td>
             <div class="d-flex gap-1 flex-wrap">
-              {% if s.has_wifi %}<span class="adm-badge adm-badge-info"><i class="bi bi-wifi"></i> Wi-Fi</span>{% endif %}
-              {% if s.has_projector %}<span class="adm-badge adm-badge-muted"><i class="bi bi-projector"></i></span>{% endif %}
-              {% if s.has_board %}<span class="adm-badge adm-badge-muted"><i class="bi bi-easel"></i></span>{% endif %}
+              {% for amenity in s.display_amenities %}
+                <span class="adm-badge adm-badge-info">
+                  {% if amenity.icon %}<i class="bi {{ amenity.icon }}"></i>{% endif %} {{ amenity.name }}
+                </span>
+              {% empty %}
+                <span class="adm-badge adm-badge-muted">—</span>
+              {% endfor %}
             </div>
           </td>
           <td style="text-align:right;padding-right:20px;">
-            <div class="d-flex justify-content-end gap-1">
+            <div class="d-flex justify-content-end gap-1 flex-wrap">
               <a href="{% url 'admin_space_edit' s.id %}" class="adm-btn adm-btn-sm adm-btn-outline">
                 <i class="bi bi-pencil"></i>
               </a>
+              {% if s.moderation_status != 'approved' %}
+                <form method="post" action="{% url 'admin_space_moderate' s.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="approve">
+                  <button type="submit" class="adm-btn adm-btn-sm adm-btn-success" title="Одобрить">
+                    Одобрить
+                  </button>
+                </form>
+              {% endif %}
+              {% if s.moderation_status != 'rejected' %}
+                <form method="post" action="{% url 'admin_space_moderate' s.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="reject">
+                  <button type="submit" class="adm-btn adm-btn-sm adm-btn-danger" title="Отклонить">
+                    Отклонить
+                  </button>
+                </form>
+              {% endif %}
+              {% if s.moderation_status != 'pending' %}
+                <form method="post" action="{% url 'admin_space_moderate' s.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="pending">
+                  <button type="submit" class="adm-btn adm-btn-sm adm-btn-outline" title="Вернуть на модерацию">
+                    На модерацию
+                  </button>
+                </form>
+              {% endif %}
               <form method="post" action="{% url 'admin_space_delete' s.id %}" style="display:inline;"
                     onsubmit="return confirm('Удалить помещение «{{ s.name }}»?')">
                 {% csrf_token %}
@@ -95,7 +215,7 @@
         </tr>
         {% empty %}
         <tr>
-          <td colspan="8" style="text-align:center;padding:48px;color:#94a3b8;">
+          <td colspan="9" style="text-align:center;padding:48px;color:#94a3b8;">
             <i class="bi bi-building" style="font-size:40px;display:block;margin-bottom:12px;"></i>
             Помещений пока нет
           </td>

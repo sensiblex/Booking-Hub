@@ -127,16 +127,29 @@ def admin_dashboard_api(request):
 
 @staff_member_required(login_url='/users/login/')
 def admin_spaces(request):
+    pending_spaces = []
     if Space is None:
         spaces = []
     else:
         q = request.GET.get('q', '').strip()
-        spaces = Space.objects.all().order_by('-created_at')
+        moderation_status = request.GET.get('moderation_status', '').strip()
+        spaces = (
+            Space.objects.select_related('submitted_by', 'category')
+            .prefetch_related('amenities')
+            .all()
+            .order_by('-created_at')
+        )
         if q:
             spaces = spaces.filter(
                 Q(name__icontains=q) | Q(address__icontains=q)
             )
-    return render(request, 'admin/spaces.html', {'spaces': spaces})
+        if moderation_status:
+            spaces = spaces.filter(moderation_status=moderation_status)
+        pending_spaces = spaces.filter(moderation_status=Space.MODERATION_PENDING)
+    return render(request, 'admin/spaces.html', {
+        'spaces': spaces,
+        'pending_spaces': pending_spaces,
+    })
 
 
 @staff_member_required(login_url='/users/login/')
@@ -184,6 +197,31 @@ def admin_space_delete(request, space_id):
     if request.method == 'POST':
         space.delete()
         messages.success(request, 'Помещение удалено.')
+    return redirect('admin_spaces')
+
+
+@staff_member_required(login_url='/users/login/')
+def admin_space_moderate(request, space_id):
+    space = get_object_or_404(Space, pk=space_id)
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        note = request.POST.get('moderation_note', '').strip()
+        if action == 'approve':
+            space.moderation_status = Space.MODERATION_APPROVED
+            message_text = 'Помещение одобрено.'
+        elif action == 'reject':
+            space.moderation_status = Space.MODERATION_REJECTED
+            message_text = 'Помещение отклонено.'
+        elif action == 'pending':
+            space.moderation_status = Space.MODERATION_PENDING
+            message_text = 'Помещение возвращено на модерацию.'
+        else:
+            messages.error(request, 'Некорректное действие модерации.')
+            return redirect('admin_spaces')
+
+        space.moderation_note = note
+        space.save(update_fields=['moderation_status', 'moderation_note'])
+        messages.success(request, message_text)
     return redirect('admin_spaces')
 
 

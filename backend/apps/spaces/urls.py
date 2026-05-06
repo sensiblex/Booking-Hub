@@ -5,6 +5,6 @@ app_name = 'spaces'
 
 urlpatterns = [
     path('', views.space_list, name='list'),
+    path('submit/', views.space_submit, name='submit'),
     path('<int:pk>/', views.space_detail, name='detail'),
-    # Добавьте другие URL по необходимости
 ]

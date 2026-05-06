@@ -60,4 +60,29 @@ class SpaceForm(forms.ModelForm):
         if commit:
             space.save()
             self.save_m2m()
+            selected_amenities = set(space.amenities.values_list('slug', flat=True))
+            space.has_wifi = 'wifi' in selected_amenities
+            space.has_projector = 'projector' in selected_amenities
+            space.has_board = 'board' in selected_amenities
+            space.save(update_fields=['has_wifi', 'has_projector', 'has_board'])
         return space
+
+
+class UserSpaceSubmissionForm(forms.ModelForm):
+    class Meta:
+        model = Space
+        fields = (
+            'name',
+            'category',
+            'address',
+            'capacity',
+            'price_per_hour',
+            'description',
+            'amenities',
+            'image',
+        )
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 4}),
+            'amenities': forms.CheckboxSelectMultiple(),
+            'image': forms.FileInput(attrs={'accept': 'image/jpeg,image/png,image/webp'}),
+        }

@@ -6,7 +6,7 @@ from django.conf.urls.static import static
 from apps.users.views_admin import (
     admin_dashboard,
     admin_dashboard_api,
-    admin_spaces, admin_space_create, admin_space_edit, admin_space_delete,
+    admin_spaces, admin_space_create, admin_space_edit, admin_space_delete, admin_space_moderate,
     admin_bookings, admin_booking_status,
     admin_payments,
 )
@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin-panel/spaces/add/',                       admin_space_create,   name='admin_space_create'),
     path('admin-panel/spaces/<int:space_id>/edit/',       admin_space_edit,     name='admin_space_edit'),
     path('admin-panel/spaces/<int:space_id>/delete/',     admin_space_delete,   name='admin_space_delete'),
+    path('admin-panel/spaces/<int:space_id>/moderate/',   admin_space_moderate, name='admin_space_moderate'),
     path('admin-panel/bookings/',                         admin_bookings,       name='admin_bookings'),
     path('admin-panel/bookings/<int:booking_id>/status/', admin_booking_status, name='admin_booking_status'),
     path('admin-panel/payments/',                         admin_payments,       name='admin_payments'),

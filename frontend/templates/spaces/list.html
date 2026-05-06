@@ -263,12 +263,23 @@
         <h1>Каталог помещений</h1>
         <p class="subtitle">Найдите идеальное пространство для работы, встреч или мероприятий</p>
       </div>
-      <form method="get" class="search-bar-wrap" style="min-width:280px; max-width:360px; width:100%;">
-        <i class="bi bi-search"></i>
-        <input id="js-search" name="q" type="text" class="form-control search-input"
-               placeholder="Поиск по названию или адресу…"
-               value="{{ request.GET.q|default:'' }}">
-      </form>
+      <div class="d-flex align-items-center gap-2 flex-wrap" style="min-width:280px; max-width:560px; width:100%;">
+        {% if user.is_authenticated %}
+          <a href="{% url 'spaces:submit' %}" class="card-btn" style="white-space:nowrap;">
+            <i class="bi bi-building-add"></i> Добавить помещение
+          </a>
+        {% else %}
+          <a href="/users/login/?next={% url 'spaces:submit' %}" class="card-btn" style="white-space:nowrap;">
+            <i class="bi bi-building-add"></i> Добавить помещение
+          </a>
+        {% endif %}
+        <form method="get" class="search-bar-wrap" style="min-width:220px; flex:1;">
+          <i class="bi bi-search"></i>
+          <input id="js-search" name="q" type="text" class="form-control search-input"
+                 placeholder="Поиск по названию или адресу…"
+                 value="{{ request.GET.q|default:'' }}">
+        </form>
+      </div>
     </div>
   </div>
 
