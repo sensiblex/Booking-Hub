@@ -1,8 +1,11 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from datetime import timedelta
 
 from apps.spaces.models import Space
 
@@ -73,13 +76,46 @@ def check_booking_availability(request):
 
 @login_required(login_url='/users/login/')
 def booking_history(request):
+    cutoff = timezone.now() - timedelta(days=30)
+    Booking.objects.filter(
+        user=request.user,
+        status__in=[Booking.STATUS_CANCELLED, Booking.STATUS_COMPLETED],
+        check_out__lt=cutoff,
+    ).delete()
+    Booking.objects.filter(
+        user=request.user,
+        status__in=[Booking.STATUS_CONFIRMED, Booking.STATUS_AWAITING_CONFIRMATION],
+        check_out__lt=timezone.now(),
+    ).update(status=Booking.STATUS_COMPLETED)
+
+    sort = request.GET.get('sort', 'created_desc')
+    order_map = {
+        'created_desc': '-created_at',
+        'created_asc': 'created_at',
+        'date_asc': 'check_in',
+        'date_desc': '-check_in',
+    }
+    order = order_map.get(sort, '-created_at')
+
     bookings = (
         Booking.objects
         .select_related('space', 'payment')
         .filter(user=request.user)
-        .order_by('-check_in')
+        .order_by(order)
     )
-    return render(request, 'bookings/history.html', {'bookings': bookings})
+    return render(request, 'bookings/history.html', {'bookings': bookings, 'current_sort': sort})
+
+
+@login_required(login_url='/users/login/')
+def clear_booking_history(request):
+    if request.method == 'POST':
+        deleted, _ = Booking.objects.filter(
+            user=request.user,
+            status__in=[Booking.STATUS_CANCELLED, Booking.STATUS_CONFIRMED],
+            check_out__lt=timezone.now(),
+        ).delete()
+        messages.success(request, f'Удалено {deleted} завершённых бронирований.')
+    return redirect('bookings:history')
 
 
 @login_required(login_url='/users/login/')

@@ -10,12 +10,14 @@ class Booking(models.Model):
     STATUS_PENDING = 'pending'
     STATUS_AWAITING_CONFIRMATION = 'awaiting_confirmation'
     STATUS_CONFIRMED = 'confirmed'
+    STATUS_COMPLETED = 'completed'
     STATUS_CANCELLED = 'cancelled'
 
     STATUS_CHOICES = [
         (STATUS_PENDING, 'Ожидает оплаты'),
         (STATUS_AWAITING_CONFIRMATION, 'Ожидает подтверждения'),
         (STATUS_CONFIRMED, 'Подтверждено'),
+        (STATUS_COMPLETED, 'Завершено'),
         (STATUS_CANCELLED, 'Отменено'),
     ]
 

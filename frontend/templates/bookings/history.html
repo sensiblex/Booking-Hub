@@ -9,7 +9,27 @@
 
 {% block content %}
 <div class="container py-5">
-    <h2 class="mb-4">Мои бронирования</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h2 class="mb-0">Мои бронирования</h2>
+        <div class="d-flex gap-2 align-items-center">
+            {% if bookings %}
+            <form method="post" action="{% url 'bookings:clear_history' %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Удалить все завершённые и отменённые бронирования? Активные бронирования будут сохранены.')">
+                    <i class="bi bi-trash3 me-1"></i>Очистить историю
+                </button>
+            </form>
+            {% endif %}
+            <form method="get">
+                <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()" style="width:auto;">
+                    <option value="created_desc" {% if current_sort == 'created_desc' %}selected{% endif %}>Сначала новые</option>
+                    <option value="created_asc" {% if current_sort == 'created_asc' %}selected{% endif %}>Сначала старые</option>
+                    <option value="date_asc" {% if current_sort == 'date_asc' %}selected{% endif %}>По дате бронирования (убывание)</option>
+                    <option value="date_desc" {% if current_sort == 'date_desc' %}selected{% endif %}>По дате бронирования (возрастание)</option>
+                </select>
+            </form>
+        </div>
+    </div>
 
     {% if bookings %}
     <div class="table-responsive">
@@ -40,6 +60,8 @@
                             <span class="badge bg-success">Подтверждено</span>
                         {% elif booking.status == 'awaiting_confirmation' %}
                             <span class="badge bg-info">Ожидает подтверждения</span>
+                        {% elif booking.status == 'completed' %}
+                            <span class="badge bg-secondary">Завершено</span>
                         {% elif booking.status == 'pending' %}
                             <span class="badge bg-warning">Ожидает оплаты</span>
                         {% elif booking.status == 'cancelled' %}

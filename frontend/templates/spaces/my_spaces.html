@@ -189,6 +189,8 @@
                 <td>
                   {% if booking.status == 'confirmed' %}
                     <span class="status-badge status-confirmed">Подтверждено</span>
+                  {% elif booking.status == 'completed' %}
+                    <span class="status-badge" style="background:#e2e8f0;color:#64748b;">Завершено</span>
                   {% elif booking.status == 'cancelled' %}
                     <span class="status-badge status-cancelled">Отменено</span>
                   {% elif booking.status == 'pending' %}

@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     booking_create,
     booking_history,
+    clear_booking_history,
     check_booking_availability,
     cancel_booking,
     manager_bookings,
@@ -14,6 +15,7 @@ urlpatterns = [
     path('check-availability/', check_booking_availability, name='check_availability'),
     path('create/<int:space_id>/', booking_create, name='create'),
     path('history/', booking_history, name='history'),
+    path('history/clear/', clear_booking_history, name='clear_history'),
     path('manager/', manager_bookings, name='manager_bookings'),
     path('cancel/<int:booking_id>/', cancel_booking, name='cancel'),
     path('status/<int:booking_id>/', update_booking_status, name='update_status'),
