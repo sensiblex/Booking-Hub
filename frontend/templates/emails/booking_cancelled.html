@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Бронирование отменено</title>
+</head>
+<body>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>Бронирование отменено</h2>
+        <p>Здравствуйте, {{ user.username }}!</p>
+        <p>Ваше бронирование помещения <strong>{{ space.name }}</strong> было отменено.</p>
+        
+        <div style="background: #f5f5f5; padding: 15px; margin: 20px 0;">
+            <p><strong>Номер бронирования:</strong> #{{ booking.id }}</p>
+            <p><strong>Помещение:</strong> {{ space.name }}</p>
+            <p><strong>Заезд:</strong> {{ booking.check_in|date:"d.m.Y H:i" }}</p>
+            <p><strong>Выезд:</strong> {{ booking.check_out|date:"d.m.Y H:i" }}</p>
+        </div>
+        
+        <p>Если вы не отменяли бронирование, пожалуйста, свяжитесь с нами.</p>
+    </div>
+</body>
+</html>

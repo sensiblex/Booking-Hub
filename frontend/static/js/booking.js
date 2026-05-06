@@ -52,27 +52,30 @@
 
       const params = new URLSearchParams({
         space_id: spaceInput.value,
-        start_time: startInput.value,
-        end_time: endInput.value,
+        check_in: startInput.value,
+        check_out: endInput.value,
       });
 
-      try {
-        const response = await fetch(`${urlInput.value}?${params.toString()}`, {
-          headers: { 'X-Requested-With': 'XMLHttpRequest' },
-          signal: controller.signal,
-        });
-        const data = await response.json();
+       try {
+         const response = await fetch(`${urlInput.value}?${params.toString()}`, {
+           headers: { 'X-Requested-With': 'XMLHttpRequest' },
+           signal: controller.signal,
+           credentials: 'same-origin',
+         });
 
-        if (!response.ok || !data.available) {
-          setAvailabilityState('unavailable', data.message || 'Выбранный интервал недоступен.');
-          return;
-        }
+         const data = await response.json();
 
-        setAvailabilityState('available', data.message || 'Слот свободен.');
-      } catch (error) {
+         if (!data.available) {
+           setAvailabilityState('unavailable', data.message || 'Выбранный интервал недоступен.');
+           return;
+         }
+
+         setAvailabilityState('available', data.message || 'Слот свободен.');
+       } catch (error) {
         if (error.name === 'AbortError') {
           return;
         }
+        console.error('Availability check error:', error);
         setAvailabilityState('unavailable', 'Не удалось проверить доступность. Попробуйте еще раз.');
       }
     }

@@ -28,14 +28,15 @@ def booking_create(request, space_id):
 
     if request.method == 'POST':
         try:
-            start_time = parse_booking_datetime(request.POST.get('start_time'))
-            end_time = parse_booking_datetime(request.POST.get('end_time'))
+            check_in = parse_booking_datetime(request.POST.get('check_in'))
+            check_out = parse_booking_datetime(request.POST.get('check_out'))
             booking = create_booking(
                 user=request.user,
                 space=space,
-                start_time=start_time,
-                end_time=end_time,
-                comment=request.POST.get('comment', '').strip(),
+                check_in=check_in,
+                check_out=check_out,
+                guests=request.POST.get('guests', 1),
+                special_requests=request.POST.get('special_requests', '').strip(),
             )
         except ValidationError as exc:
             messages.error(request, ' '.join(exc.messages))
@@ -46,13 +47,12 @@ def booking_create(request, space_id):
     return render(request, 'bookings/create.html', {'space': space})
 
 
-@login_required(login_url='/users/login/')
 def check_booking_availability(request):
     try:
         space = get_object_or_404(Space, id=request.GET.get('space_id'))
-        start_time = parse_booking_datetime(request.GET.get('start_time'))
-        end_time = parse_booking_datetime(request.GET.get('end_time'))
-        check_availability(space, start_time, end_time)
+        check_in = parse_booking_datetime(request.GET.get('check_in'))
+        check_out = parse_booking_datetime(request.GET.get('check_out'))
+        check_availability(space, check_in, check_out)
     except ValidationError as exc:
         return JsonResponse({
             'available': False,
@@ -67,7 +67,7 @@ def check_booking_availability(request):
     return JsonResponse({
         'available': True,
         'message': 'Слот свободен.',
-        'total_price': calculate_total_price(space, start_time, end_time),
+        'total_price': calculate_total_price(space, check_in, check_out),
     })
 
 
@@ -77,7 +77,7 @@ def booking_history(request):
         Booking.objects
         .select_related('space', 'payment')
         .filter(user=request.user)
-        .order_by('-start_time')
+        .order_by('-check_in')
     )
     return render(request, 'bookings/history.html', {'bookings': bookings})
 
@@ -91,7 +91,7 @@ def manager_bookings(request):
     bookings = (
         Booking.objects
         .select_related('user', 'space')
-        .order_by('-start_time')
+        .order_by('-check_in')
     )
     return render(request, 'manager/bookings.html', {
         'bookings': bookings,

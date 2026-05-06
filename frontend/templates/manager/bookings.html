@@ -34,8 +34,8 @@
                     <td>{{ booking.user.get_full_name|default:booking.user.username }}</td>
                     <td>{{ booking.space.name }}</td>
                     <td>
-                        {{ booking.start_time|date:"d.m.Y" }}<br>
-                        <small>{{ booking.start_time|time:"H:i" }} — {{ booking.end_time|time:"H:i" }}</small>
+                        {{ booking.check_in|date:"d.m.Y" }}<br>
+                        <small>{{ booking.check_in|time:"H:i" }} — {{ booking.check_out|time:"H:i" }}</small>
                     </td>
                     <td>
                         {% if booking.status == 'confirmed' %}

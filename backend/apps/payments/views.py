@@ -11,8 +11,8 @@ def _demo_booking(booking_id=None):
     return SimpleNamespace(
         id=booking_id or 1,
         space=SimpleNamespace(name='Конференц-зал Booking-Hub'),
-        start_time=None,
-        end_time=None,
+        check_in=None,
+        check_out=None,
         total_price=0,
     )
 
@@ -30,6 +30,13 @@ def payment_pay(request, booking_id=None):
         payment = Payment.objects.create_for_booking(booking)
 
     if request.method == 'POST':
+        # Фантомная оплата: подтверждаем бронирование
+        if booking.id and isinstance(booking, Booking):
+            booking.status = Booking.STATUS_CONFIRMED
+            booking.save(update_fields=['status', 'updated_at'])
+            # Отправляем email об успешной оплате
+            from apps.notifications.services import send_payment_success_email
+            send_payment_success_email(booking)
         payment_query = f'&payment_id={payment.id}' if payment else ''
         return redirect(reverse('payments:success') + f'?booking_id={booking.id}{payment_query}')
 

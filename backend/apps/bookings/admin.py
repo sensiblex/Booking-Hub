@@ -9,8 +9,9 @@ class BookingAdmin(admin.ModelAdmin):
         'id',
         'user',
         'space',
-        'start_time',
-        'end_time',
+        'check_in',
+        'check_out',
+        'guests',
         'status',
         'total_price',
         'created_at',
@@ -19,5 +20,5 @@ class BookingAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'user__email', 'space__name')
     list_editable = ('status',)
     readonly_fields = ('created_at', 'updated_at')
-    date_hierarchy = 'start_time'
-    ordering = ('-start_time',)
+    date_hierarchy = 'check_in'
+    ordering = ('-check_in',)

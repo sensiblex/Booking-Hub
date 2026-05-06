@@ -30,12 +30,12 @@
                             </div>
                             <div class="payment-summary-row">
                                 <span class="payment-summary-label">Дата</span>
-                                <span class="payment-summary-value">{{ booking.start_time|date:'d.m.Y'|default:'—' }}</span>
+                                <span class="payment-summary-value">{{ booking.check_in|date:'d.m.Y'|default:'—' }}</span>
                             </div>
                             <div class="payment-summary-row">
                                 <span class="payment-summary-label">Время</span>
                                 <span class="payment-summary-value">
-                                    {{ booking.start_time|time:'H:i'|default:'—' }} — {{ booking.end_time|time:'H:i'|default:'—' }}
+                                    {{ booking.check_in|time:'H:i'|default:'—' }} — {{ booking.check_out|time:'H:i'|default:'—' }}
                                 </span>
                             </div>
                             <div class="payment-summary-row align-items-center">

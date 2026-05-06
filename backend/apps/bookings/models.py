@@ -29,8 +29,8 @@ class Booking(models.Model):
         related_name='bookings',
         verbose_name='Помещение',
     )
-    start_time = models.DateTimeField(verbose_name='Начало бронирования')
-    end_time = models.DateTimeField(verbose_name='Окончание бронирования')
+    check_in = models.DateTimeField(verbose_name='Заезд')
+    check_out = models.DateTimeField(verbose_name='Выезд')
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
@@ -38,7 +38,8 @@ class Booking(models.Model):
         verbose_name='Статус',
     )
     total_price = models.PositiveIntegerField(default=0, verbose_name='Сумма')
-    comment = models.TextField(blank=True, verbose_name='Комментарий')
+    guests = models.PositiveIntegerField(default=1, verbose_name='Количество гостей')
+    special_requests = models.TextField(blank=True, verbose_name='Особые пожелания')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создано')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Обновлено')
 
@@ -47,33 +48,33 @@ class Booking(models.Model):
         verbose_name_plural = 'Бронирования'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['space', 'start_time', 'end_time']),
+            models.Index(fields=['space', 'check_in', 'check_out']),
             models.Index(fields=['user', '-created_at']),
             models.Index(fields=['status']),
         ]
 
     def __str__(self):
-        return f'{self.space} — {self.user} ({self.start_time:%d.%m.%Y %H:%M})'
+        return f'{self.space} — {self.user} ({self.check_in:%d.%m.%Y %H:%M})'
 
     @property
     def duration_hours(self):
-        if not self.start_time or not self.end_time:
+        if not self.check_in or not self.check_out:
             return 0
-        return (self.end_time - self.start_time).total_seconds() / 3600
+        return (self.check_out - self.check_in).total_seconds() / 3600
 
     def clean(self):
         errors = {}
 
-        if self.start_time and timezone.is_naive(self.start_time):
-            self.start_time = timezone.make_aware(self.start_time)
-        if self.end_time and timezone.is_naive(self.end_time):
-            self.end_time = timezone.make_aware(self.end_time)
+        if self.check_in and timezone.is_naive(self.check_in):
+            self.check_in = timezone.make_aware(self.check_in)
+        if self.check_out and timezone.is_naive(self.check_out):
+            self.check_out = timezone.make_aware(self.check_out)
 
-        if self.start_time and self.end_time and self.end_time <= self.start_time:
-            errors['end_time'] = 'Окончание должно быть позже начала.'
+        if self.check_in and self.check_out and self.check_out <= self.check_in:
+            errors['check_out'] = 'Окончание должно быть позже начала.'
 
-        if self.start_time and self.start_time < timezone.now():
-            errors['start_time'] = 'Нельзя создать бронирование в прошлом.'
+        if self.check_in and self.check_in < timezone.now():
+            errors['check_in'] = 'Нельзя создать бронирование в прошлом.'
 
         if errors:
             raise ValidationError(errors)

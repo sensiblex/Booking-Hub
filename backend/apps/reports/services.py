@@ -1,6 +1,6 @@
 # apps/reports/services.py
 from django.db.models import Count, Sum, Q, Avg, F, DurationField, ExpressionWrapper
-from django.db.models.functions import ExtractHour, ExtractWeekDay, TruncDate, TruncMonth
+from django.db.models.functions import ExtractHour, ExtractWeekDay, ExtractSecond, ExtractMinute, TruncDate
 from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
@@ -28,121 +28,174 @@ class ReportService:
         return Booking.objects.filter(
             user=self.user,
             created_at__gte=self.start_date
-        )
+        ).select_related('space')
     
     def get_basic_stats(self):
-        """Базовая статистика бронирований"""
+        """Базовая статистика бронирований (один запрос к БД)"""
         bookings = self.get_bookings_queryset()
         
-        total = bookings.count()
-        active = bookings.filter(
-            status__in=['pending', 'confirmed'],
-            end_time__gte=timezone.now()
-        ).count()
-        completed = bookings.filter(status='confirmed', end_time__lt=timezone.now()).count()
-        cancelled = bookings.filter(status='cancelled').count()
+        # Используем агрегацию Django ORM вместо нескольких запросов
+        stats = bookings.aggregate(
+            total=Count('id'),
+            active=Count('id', filter=Q(status__in=['pending', 'confirmed'], check_out__gte=timezone.now())),
+            completed=Count('id', filter=Q(status='confirmed', check_out__lt=timezone.now())),
+            cancelled=Count('id', filter=Q(status='cancelled'))
+        )
+        
+        total = stats['total']
         
         return {
             'total_bookings': total,
-            'active_bookings': active,
-            'completed_bookings': completed,
-            'cancelled_bookings': cancelled,
-            'cancellation_rate': round((cancelled / total * 100), 1) if total > 0 else 0,
+            'active_bookings': stats['active'],
+            'completed_bookings': stats['completed'],
+            'cancelled_bookings': stats['cancelled'],
+            'cancellation_rate': round((stats['cancelled'] / total * 100), 1) if total > 0 else 0,
         }
     
     def get_time_stats(self):
-        """Статистика по времени бронирований"""
+        """Статистика по времени бронирований (агрегация в БД)"""
         bookings = self.get_bookings_queryset()
         
-        # Общее время в часах
-        total_hours = 0
-        for booking in bookings:
-            if booking.start_time and booking.end_time:
-                duration = (booking.end_time - booking.start_time).total_seconds() / 3600
-                total_hours += duration
+        # Вычисляем длительность на уровне БД
+        duration_expr = ExpressionWrapper(
+            F('check_out') - F('check_in'),
+            output_field=DurationField()
+        )
         
-        # Средняя длительность
-        total_bookings = bookings.count()
-        avg_duration = total_hours / total_bookings if total_bookings > 0 else 0
+        # Получаем среднюю и суммарную длительность через ORM
+        time_stats = bookings.filter(
+            check_in__isnull=False, 
+            check_out__isnull=False
+        ).aggregate(
+            total_seconds=Sum(ExtractHour(duration_expr) * 3600 + 
+                           ExtractMinute(duration_expr) * 60 + 
+                           ExtractSecond(duration_expr)),
+            avg_seconds=Avg(ExtractHour(duration_expr) * 3600 + 
+                           ExtractMinute(duration_expr) * 60 + 
+                           ExtractSecond(duration_expr))
+        )
+        
+        total_seconds = time_stats['total_seconds'] or 0
+        avg_seconds = time_stats['avg_seconds'] or 0
+        
+        total_hours = total_seconds / 3600
+        avg_hours = avg_seconds / 3600
         
         # Частота бронирований в месяц
+        total_bookings = bookings.count()
         days_in_period = self.period_days if self.period_days > 0 else 365
         frequency = (total_bookings / (days_in_period / 30)) if days_in_period > 0 else 0
         
         return {
             'total_hours': round(total_hours, 1),
-            'avg_duration': round(avg_duration, 1),
+            'avg_duration': round(avg_hours, 1),
             'frequency': round(frequency, 1),
         }
     
     def get_daily_stats(self):
-        """Статистика по дням (для графика динамики)"""
+        """Статистика по дням (GROUP BY в БД)"""
         bookings = self.get_bookings_queryset()
         
-        # Группировка по датам
-        daily_counts = {}
-        for booking in bookings.order_by('created_at'):
-            date = booking.created_at.strftime('%d.%m')
-            daily_counts[date] = daily_counts.get(date, 0) + 1
+        # Группировка на уровне БД с помощью TruncDate
+        daily_data = (
+            bookings
+            .annotate(date=TruncDate('created_at'))
+            .values('date')
+            .annotate(count=Count('id'))
+            .order_by('date')
+        )
+        
+        dates = []
+        counts = []
+        for item in daily_data:
+            date_str = item['date'].strftime('%d.%m') if item['date'] else '—'
+            dates.append(date_str)
+            counts.append(item['count'])
         
         return {
-            'dates': list(daily_counts.keys()),
-            'bookings_by_date': list(daily_counts.values()),
+            'dates': dates,
+            'bookings_by_date': counts,
         }
     
     def get_spaces_popularity(self):
-        """Популярность помещений"""
+        """Популярность помещений (GROUP BY в БД)"""
         bookings = self.get_bookings_queryset()
         
-        space_counts = {}
-        for booking in bookings:
-            space_name = booking.space.name
-            space_counts[space_name] = space_counts.get(space_name, 0) + 1
-        
-        # Сортируем и берем топ-5
-        top_spaces = sorted(space_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+        # Группировка на уровне БД
+        space_data = (
+            bookings
+            .values('space__name')
+            .annotate(count=Count('id'))
+            .order_by('-count')[:5]
+        )
         
         return {
-            'space_names': [item[0] for item in top_spaces],
-            'space_bookings': [item[1] for item in top_spaces],
+            'space_names': [item['space__name'] for item in space_data],
+            'space_bookings': [item['count'] for item in space_data],
         }
     
     def get_weekday_stats(self):
-        """Активность по дням недели (0=понедельник)"""
+        """Активность по дням недели (GROUP BY в БД)"""
         bookings = self.get_bookings_queryset()
-        
-        weekday_counts = {i: 0 for i in range(7)}
         weekday_names = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
         
-        for booking in bookings:
-            if booking.created_at:
-                weekday = booking.created_at.weekday()
-                weekday_counts[weekday] = weekday_counts.get(weekday, 0) + 1
+        # Извлечение дня недели на уровне БД
+        weekday_data = (
+            bookings
+            .annotate(weekday=ExtractWeekDay('created_at'))
+            .values('weekday')
+            .annotate(count=Count('id'))
+            .order_by('weekday')
+        )
+        
+        # Заполняем массив результатов (0=воскресенье в Django, преобразуем к 0=понедельник)
+        weekday_counts = [0] * 7
+        for item in weekday_data:
+            # Django ExtractWeekDay: 1=воскресенье, 2=понедельник... 7=суббота
+            dj_weekday = int(item['weekday'])
+            # Преобразуем к 0=понедельник
+            idx = (dj_weekday + 5) % 7
+            weekday_counts[idx] = item['count']
         
         return {
             'weekday_labels': weekday_names,
-            'weekday_stats': [weekday_counts[i] for i in range(7)],
+            'weekday_stats': weekday_counts,
         }
     
     def get_hourly_stats(self):
-        """Популярные часы бронирования"""
+        """Популярные часы бронирования (GROUP BY в БД)"""
         bookings = self.get_bookings_queryset()
         
-        hour_counts = {}
-        for booking in bookings:
-            if booking.start_time:
-                hour = booking.start_time.hour
-                hour_counts[hour] = hour_counts.get(hour, 0) + 1
+        # Извлечение часа на уровне БД
+        hour_data = (
+            bookings
+            .filter(check_in__isnull=False)
+            .annotate(hour=ExtractHour('check_in'))
+            .values('hour')
+            .annotate(count=Count('id'))
+            .order_by('hour')
+        )
         
-        sorted_hours = sorted(hour_counts.items())
+        hour_counts = [0] * 24
+        for item in hour_data:
+            hour = int(item['hour'])
+            hour_counts[hour] = item['count']
+        
+        # Возвращаем только часы с бронированиями
+        popular_hours = []
+        popular_counts = []
+        for hour in range(24):
+            if hour_counts[hour] > 0:
+                popular_hours.append(hour)
+                popular_counts.append(hour_counts[hour])
         
         return {
-            'popular_hours': [h for h, _ in sorted_hours],
-            'popular_hours_counts': [c for _, c in sorted_hours],
+            'popular_hours': popular_hours,
+            'popular_hours_counts': popular_counts,
         }
     
     def get_status_breakdown(self):
-        """Разбивка по статусам"""
+        """Разбивка по статусам (GROUP BY в БД)"""
         bookings = self.get_bookings_queryset()
         
         status_map = {
@@ -151,11 +204,16 @@ class ReportService:
             'cancelled': 'Отменено',
         }
         
-        status_counts = {
-            'pending': bookings.filter(status='pending').count(),
-            'confirmed': bookings.filter(status='confirmed').count(),
-            'cancelled': bookings.filter(status='cancelled').count(),
-        }
+        # Группировка на уровне БД
+        status_data = (
+            bookings
+            .values('status')
+            .annotate(count=Count('id'))
+        )
+        
+        status_counts = {'pending': 0, 'confirmed': 0, 'cancelled': 0}
+        for item in status_data:
+            status_counts[item['status']] = item['count']
         
         return {
             'status_breakdown': status_counts,
@@ -168,12 +226,14 @@ class ReportService:
         
         recent = []
         for booking in bookings:
-            duration = (booking.end_time - booking.start_time).total_seconds() / 3600 if booking.start_time and booking.end_time else 0
+            duration = 0
+            if booking.check_in and booking.check_out:
+                duration = (booking.check_out - booking.check_in).total_seconds() / 3600
             
             recent.append({
                 'space_name': booking.space.name,
                 'date': booking.created_at.strftime('%d.%m.%Y'),
-                'time': f"{booking.start_time.strftime('%H:%M')} - {booking.end_time.strftime('%H:%M')}" if booking.start_time else '-',
+                'time': f"{booking.check_in.strftime('%H:%M')} - {booking.check_out.strftime('%H:%M')}" if booking.check_in else '-',
                 'duration': f"{duration:.1f} ч" if duration > 0 else '-',
                 'status': booking.status,
                 'status_display': dict(Booking.STATUS_CHOICES).get(booking.status, booking.status),

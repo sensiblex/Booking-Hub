@@ -239,9 +239,9 @@ def admin_bookings(request):
                 Q(space__name__icontains=q)
             )
         if date_from:
-            bookings = bookings.filter(start_time__date__gte=date_from)
+            bookings = bookings.filter(check_in__date__gte=date_from)
         if date_to:
-            bookings = bookings.filter(start_time__date__lte=date_to)
+            bookings = bookings.filter(check_in__date__lte=date_to)
 
         status_choices = Booking.STATUS_CHOICES if hasattr(Booking, 'STATUS_CHOICES') else []
 

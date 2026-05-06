@@ -24,30 +24,35 @@
             <div class="booking-body">
                 <form method="post" id="booking-form" data-booking-calendar data-price-per-hour="{{ space.price_per_hour }}">
                     {% csrf_token %}
-                    <input type="hidden" id="booking-availability-url" value="{% url 'bookings:check_availability' %}">
-                    <input type="hidden" id="booking-space-id" value="{{ space.id }}">
+                     <input type="hidden" id="booking-availability-url" value="{% url 'bookings:check_availability' %}">
+                     <input type="hidden" id="booking-space-id" value="{{ space.id }}">
 
-                    <div class="row g-4">
-                        <div class="col-12 col-md-6">
-                            <label class="form-label">Начало бронирования</label>
-                            <input type="text" id="datetime_start" name="start_time" 
-                                   class="form-control flatpickr-input" 
-                                   placeholder="Дата и время начала" required>
-                        </div>
+                     <div class="row g-4">
+                         <div class="col-12 col-md-6">
+                             <label class="form-label">Заезд</label>
+                             <input type="text" id="datetime_start" name="check_in"
+                                    class="form-control flatpickr-input"
+                                    placeholder="Дата и время начала" required>
+                         </div>
 
-                        <div class="col-12 col-md-6">
-                            <label class="form-label">Окончание бронирования</label>
-                            <input type="text" id="datetime_end" name="end_time" 
-                                   class="form-control flatpickr-input" 
-                                   placeholder="Дата и время окончания" required>
-                        </div>
-                    </div>
+                         <div class="col-12 col-md-6">
+                             <label class="form-label">Выезд</label>
+                             <input type="text" id="datetime_end" name="check_out"
+                                    class="form-control flatpickr-input"
+                                    placeholder="Дата и время окончания" required>
+                         </div>
+                     </div>
 
-                    <div class="mt-4">
-                        <label class="form-label">Комментарий (необязательно)</label>
-                        <textarea name="comment" class="form-control" rows="4"
-                                  placeholder="Цель бронирования, количество людей, особые пожелания..."></textarea>
-                    </div>
+                     <div class="mt-4">
+                         <label class="form-label">Количество гостей</label>
+                         <input type="number" name="guests" class="form-control" value="1" min="1">
+                     </div>
+
+                     <div class="mt-4">
+                         <label class="form-label">Особые пожелания</label>
+                         <textarea name="special_requests" class="form-control" rows="4"
+                                   placeholder="Цель бронирования, количество людей, особые пожелания..."></textarea>
+                     </div>
 
                     <!-- Блок стоимости -->
                     <div class="price-summary">

@@ -91,3 +91,7 @@ DATABASES = {
 LOGIN_URL = '/users/login/'
 LOGOUT_URL = '/users/logout/'
 LOGIN_REDIRECT_URL = '/'
+
+# Email settings (console backend for development)
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'webmaster@localhost')
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
