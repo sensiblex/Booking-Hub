@@ -37,9 +37,6 @@ urlpatterns = [
     # Apps
     path('users/',  include('apps.users.urls')),
     path('spaces/', include('apps.spaces.urls')),
-
-    # Отчеты
-    path('reports/', include('apps.reports.urls')),
 ]
 
 # СТАЛО
