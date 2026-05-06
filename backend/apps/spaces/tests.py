@@ -328,6 +328,24 @@ class SpaceModerationAdminTests(TestCase):
         space.refresh_from_db()
         self.assertEqual(space.moderation_status, Space.MODERATION_PENDING)
 
+    def test_admin_reject_requires_reason(self):
+        space = Space.objects.create(
+            name='Площадка для теста причины',
+            address='ул. Тест, 1',
+            capacity=10,
+            price_per_hour=1000,
+            moderation_status=Space.MODERATION_PENDING,
+        )
+        self.client.force_login(self.admin)
+
+        response = self.client.post(reverse('admin_space_moderate', args=[space.pk]), {
+            'action': 'reject',
+        })
+
+        self.assertRedirects(response, reverse('admin_spaces'))
+        space.refresh_from_db()
+        self.assertEqual(space.moderation_status, Space.MODERATION_PENDING)
+
 
 class SeedSpacesCommandTests(TestCase):
     def test_seed_spaces_creates_pending_and_approved_data(self):
@@ -407,3 +425,42 @@ class LandlordBookingManagementTests(TestCase):
     def test_unauthenticated_cannot_access_my_spaces(self):
         response = self.client.get(reverse('spaces:my_spaces'))
         self.assertRedirects(response, '/users/login/?next=/spaces/my/')
+
+    def test_landlord_can_edit_rejected_space(self):
+        self.space.moderation_status = Space.MODERATION_REJECTED
+        self.space.moderation_note = 'Неверный адрес'
+        self.space.save()
+        self.client.force_login(self.landlord)
+        response = self.client.get(reverse('spaces:edit', args=[self.space.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Причина отклонения')
+        self.assertContains(response, 'Неверный адрес')
+
+    def test_landlord_cannot_edit_approved_space(self):
+        self.space.moderation_status = Space.MODERATION_APPROVED
+        self.space.save()
+        self.client.force_login(self.landlord)
+        response = self.client.get(reverse('spaces:edit', args=[self.space.pk]))
+        self.assertRedirects(response, reverse('spaces:my_spaces'))
+
+    def test_edit_rejected_space_resubmits_for_moderation(self):
+        self.space.moderation_status = Space.MODERATION_REJECTED
+        self.space.moderation_note = 'Неверный адрес'
+        self.space.save()
+        self.client.force_login(self.landlord)
+        response = self.client.post(reverse('spaces:edit', args=[self.space.pk]), {
+            'name': 'Новое название',
+            'address': 'ул. Исправленная, 5',
+            'capacity': '15',
+            'price_per_hour': '1200',
+        })
+        self.assertRedirects(response, reverse('spaces:my_spaces'))
+        self.space.refresh_from_db()
+        self.assertEqual(self.space.moderation_status, Space.MODERATION_PENDING)
+        self.assertEqual(self.space.moderation_note, '')
+        self.assertEqual(self.space.name, 'Новое название')
+
+    def test_other_user_cannot_edit_space(self):
+        self.client.force_login(self.tenant)
+        response = self.client.get(reverse('spaces:edit', args=[self.space.pk]))
+        self.assertEqual(response.status_code, 404)

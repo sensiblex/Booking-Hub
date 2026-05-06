@@ -52,14 +52,6 @@
 
     <!-- Main -->
     <main class="adm-main">
-      {% if messages %}
-        {% for msg in messages %}
-          <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %} alert-dismissible fade show mb-3" role="alert">
-            {{ msg }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
       {% block admin_content %}{% endblock %}
     </main>
 

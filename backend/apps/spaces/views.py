@@ -94,3 +94,31 @@ def decline_booking(request, booking_id):
         booking.save(update_fields=['status', 'updated_at'])
         messages.success(request, f'Бронирование #{booking.id} отклонено.')
     return redirect('spaces:my_spaces')
+
+
+@login_required(login_url='/users/login/')
+def space_edit(request, pk):
+    space = get_object_or_404(Space, pk=pk, submitted_by=request.user)
+    if space.moderation_status == Space.MODERATION_APPROVED:
+        messages.error(request, 'Нельзя редактировать опубликованное помещение.')
+        return redirect('spaces:my_spaces')
+    form = UserSpaceSubmissionForm(request.POST or None, request.FILES or None, instance=space)
+    if request.method == 'POST':
+        if form.is_valid():
+            space = form.save(commit=False)
+            space.moderation_status = Space.MODERATION_PENDING
+            space.moderation_note = ''
+            space.save()
+            form.save_m2m()
+            selected_amenities = set(space.amenities.values_list('slug', flat=True))
+            if 'wifi' in selected_amenities:
+                space.has_wifi = True
+            if 'projector' in selected_amenities:
+                space.has_projector = True
+            if 'board' in selected_amenities:
+                space.has_board = True
+            space.save(update_fields=['has_wifi', 'has_projector', 'has_board'])
+            messages.success(request, 'Помещение отправлено на модерацию.')
+            return redirect('spaces:my_spaces')
+        messages.error(request, 'Проверьте данные формы.')
+    return render(request, 'spaces/edit.html', {'form': form, 'space': space})

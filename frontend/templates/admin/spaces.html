@@ -90,13 +90,9 @@
               <i class="bi bi-check-lg"></i> Одобрить
             </button>
           </form>
-          <form method="post" action="{% url 'admin_space_moderate' s.id %}">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="reject">
-            <button type="submit" class="adm-btn adm-btn-danger">
-              <i class="bi bi-x-lg"></i> Отклонить
-            </button>
-          </form>
+          <button type="button" class="adm-btn adm-btn-danger reject-btn" data-url="{% url 'admin_space_moderate' s.id %}" data-name="{{ s.name }}">
+            <i class="bi bi-x-lg"></i> Отклонить
+          </button>
           <form method="post" action="{% url 'admin_space_moderate' s.id %}">
             {% csrf_token %}
             <input type="hidden" name="action" value="pending">
@@ -186,13 +182,9 @@
                 </form>
               {% endif %}
               {% if s.moderation_status != 'rejected' %}
-                <form method="post" action="{% url 'admin_space_moderate' s.id %}" style="display:inline;">
-                  {% csrf_token %}
-                  <input type="hidden" name="action" value="reject">
-                  <button type="submit" class="adm-btn adm-btn-sm adm-btn-danger" title="Отклонить">
-                    Отклонить
-                  </button>
-                </form>
+                <button type="button" class="adm-btn adm-btn-sm adm-btn-danger reject-btn" data-url="{% url 'admin_space_moderate' s.id %}" data-name="{{ s.name }}" title="Отклонить">
+                  Отклонить
+                </button>
               {% endif %}
               {% if s.moderation_status != 'pending' %}
                 <form method="post" action="{% url 'admin_space_moderate' s.id %}" style="display:inline;">
@@ -225,4 +217,72 @@
     </table>
   </div>
 </div>
+
+<!-- Reject overlay -->
+<div id="rejectOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;padding:1.75rem;width:420px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;">
+      <i class="bi bi-exclamation-triangle" style="font-size:1.3rem;color:#dc3545;"></i>
+      <h6 style="margin:0;font-size:1rem;font-weight:700;">Отклонить помещение</h6>
+      <button onclick="document.getElementById('rejectOverlay').style.display='none'" style="margin-left:auto;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#999;padding:0 .25rem;">&times;</button>
+    </div>
+    <p style="font-size:.85rem;color:#6b7280;margin-bottom:.75rem;">Помещение: <strong id="rejectOverlayName"></strong></p>
+    <label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.35rem;">Причина отклонения</label>
+    <textarea id="rejectOverlayNote" rows="3" style="width:100%;border:1.5px solid #e5e7eb;border-radius:8px;padding:.6rem .75rem;font-size:.875rem;resize:vertical;font-family:inherit;" placeholder="Укажите, что нужно исправить..."></textarea>
+    <div style="display:flex;gap:.5rem;margin-top:1rem;justify-content:flex-end;">
+      <button onclick="document.getElementById('rejectOverlay').style.display='none'" style="padding:.45rem 1.1rem;border:1.5px solid #e5e7eb;border-radius:8px;background:none;font-size:.82rem;font-weight:600;cursor:pointer;">Отмена</button>
+      <button id="rejectOverlaySubmit" style="padding:.45rem 1.1rem;border:none;border-radius:8px;background:#dc3545;color:#fff;font-size:.82rem;font-weight:600;cursor:pointer;"><i class="bi bi-x-lg me-1"></i>Отклонить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var overlay = document.getElementById('rejectOverlay');
+  var noteEl  = document.getElementById('rejectOverlayNote');
+  var nameEl  = document.getElementById('rejectOverlayName');
+  var url     = '';
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.reject-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        url  = this.dataset.url;
+        nameEl.textContent = this.dataset.name;
+        noteEl.value = '';
+        overlay.style.display = 'flex';
+        noteEl.focus();
+      });
+    });
+
+    document.getElementById('rejectOverlaySubmit').addEventListener('click', function() {
+      var note = noteEl.value.trim();
+      if (!note) { noteEl.style.borderColor = '#dc3545'; noteEl.focus(); return; }
+      var form = document.createElement('form');
+      form.method = 'POST';
+      form.action = url;
+      var csrf = document.createElement('input');
+      csrf.type = 'hidden';
+      csrf.name = 'csrfmiddlewaretoken';
+      csrf.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      var act = document.createElement('input');
+      act.type = 'hidden'; act.name = 'action'; act.value = 'reject';
+      var n = document.createElement('input');
+      n.type = 'hidden'; n.name = 'moderation_note'; n.value = note;
+      form.appendChild(csrf); form.appendChild(act); form.appendChild(n);
+      document.body.appendChild(form);
+      form.submit();
+    });
+
+    noteEl.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        document.getElementById('rejectOverlaySubmit').click();
+      }
+    });
+
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) overlay.style.display = 'none';
+    });
+  });
+})();
+</script>
 {% endblock %}

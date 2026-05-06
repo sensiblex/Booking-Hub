@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактировать помещение — Booking-Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 840px;">
+  <h1 class="mb-3">Редактировать помещение</h1>
+  {% if space.moderation_status == 'rejected' and space.moderation_note %}
+    <div class="alert alert-danger">
+      <strong>Причина отклонения:</strong> {{ space.moderation_note }}
+    </div>
+  {% endif %}
+  <p class="text-muted mb-4">После отправки помещение снова попадет на модерацию.</p>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-4">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.name.id_for_label }}">Название</label>
+          {{ form.name }}
+          {{ form.name.errors }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.address.id_for_label }}">Адрес</label>
+          {{ form.address }}
+          {{ form.address.errors }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.category.id_for_label }}">Категория</label>
+          {{ form.category }}
+          {{ form.category.errors }}
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label" for="{{ form.capacity.id_for_label }}">Вместимость</label>
+            {{ form.capacity }}
+            {{ form.capacity.errors }}
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label" for="{{ form.price_per_hour.id_for_label }}">Цена за час</label>
+            {{ form.price_per_hour }}
+            {{ form.price_per_hour.errors }}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.description.id_for_label }}">Описание</label>
+          {{ form.description }}
+          {{ form.description.errors }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.image.id_for_label }}">Фото</label>
+          {% if space.image %}
+            <div class="mb-2">
+              <img src="{{ space.image.url }}" alt="Текущее фото" style="max-height: 120px; border-radius: 8px;">
+            </div>
+          {% endif %}
+          {{ form.image }}
+          {{ form.image.errors }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label d-block">Удобства</label>
+          {{ form.amenities }}
+          {{ form.amenities.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Отправить на модерацию</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

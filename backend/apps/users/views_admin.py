@@ -210,6 +210,9 @@ def admin_space_moderate(request, space_id):
             space.moderation_status = Space.MODERATION_APPROVED
             message_text = 'Помещение одобрено.'
         elif action == 'reject':
+            if not note:
+                messages.error(request, 'Укажите причину отклонения.')
+                return redirect('admin_spaces')
             space.moderation_status = Space.MODERATION_REJECTED
             message_text = 'Помещение отклонено.'
         elif action == 'pending':
