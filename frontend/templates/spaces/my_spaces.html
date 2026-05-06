@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мои помещения — Booking-Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+  --sp-primary:       #01696f;
+  --sp-primary-light: #e6f2f2;
+  --sp-text:          #1a1a1a;
+  --sp-muted:         #6b7280;
+  --sp-border:        #e5e7eb;
+  --sp-surface:       #ffffff;
+}
+.spaces-page { background: #f8f9fa; min-height: 100vh; }
+.page-header { padding: 2rem 0 1.5rem; }
+.page-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--sp-text); margin: 0 0 .25rem; }
+.page-header .subtitle { color: var(--sp-muted); font-size: .95rem; }
+
+.space-block {
+  background: var(--sp-surface);
+  border: 1.5px solid var(--sp-border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.space-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap; gap: .75rem; margin-bottom: 1.25rem;
+}
+.space-header h3 { font-size: 1.15rem; font-weight: 700; margin: 0; }
+.space-address { font-size: .82rem; color: var(--sp-muted); }
+.moderation-badge { font-size: .72rem; padding: .2rem .6rem; border-radius: 999px; }
+
+.booking-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.booking-table th {
+  text-align: left; padding: .5rem .75rem; font-weight: 600;
+  color: var(--sp-muted); border-bottom: 2px solid var(--sp-border);
+  font-size: .75rem; text-transform: uppercase; letter-spacing: .04em;
+}
+.booking-table td {
+  padding: .6rem .75rem; border-bottom: 1px solid var(--sp-border);
+  vertical-align: middle;
+}
+.booking-table tr:last-child td { border-bottom: none; }
+.status-badge { padding: .2rem .55rem; border-radius: 6px; font-size: .75rem; font-weight: 600; }
+.status-awaiting { background: #fff3cd; color: #856404; }
+.status-confirmed { background: #d1e7dd; color: #0f5132; }
+.status-cancelled { background: #f8d7da; color: #842029; }
+.status-pending { background: #e2e3e5; color: #41464b; }
+
+.btn-confirm {
+  padding: .3rem .7rem; border: none; border-radius: 6px;
+  background: var(--sp-primary); color: #fff; font-size: .78rem;
+  font-weight: 600; cursor: pointer; text-decoration: none;
+  transition: background .15s;
+}
+.btn-confirm:hover { background: #0c4e54; color: #fff; }
+.btn-decline {
+  padding: .3rem .7rem; border: 1.5px solid #dc3545; border-radius: 6px;
+  background: none; color: #dc3545; font-size: .78rem;
+  font-weight: 600; cursor: pointer; text-decoration: none;
+  transition: all .15s;
+}
+.btn-decline:hover { background: #dc3545; color: #fff; }
+
+.empty-state { text-align: center; padding: 4rem 2rem; color: var(--sp-muted); }
+.empty-state i { font-size: 3rem; opacity: .3; margin-bottom: 1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="spaces-page">
+<div class="container-fluid" style="max-width:1280px; padding: 0 1.5rem;">
+
+  <div class="page-header">
+    <h1>Мои помещения</h1>
+    <p class="subtitle">Управляйте помещениями и обрабатывайте бронирования</p>
+  </div>
+
+  {% if spaces %}
+    {% for space in spaces %}
+    <div class="space-block">
+      <div class="space-header">
+        <div>
+          <h3>{{ space.name }}</h3>
+          <p class="space-address mb-0"><i class="bi bi-geo-alt me-1"></i>{{ space.address }}</p>
+        </div>
+        {% if space.moderation_status == 'pending' %}
+          <span class="moderation-badge bg-warning text-dark">На модерации</span>
+        {% elif space.moderation_status == 'rejected' %}
+          <span class="moderation-badge bg-danger text-white">Отклонено</span>
+        {% else %}
+          <span class="moderation-badge bg-success text-white">Опубликовано</span>
+        {% endif %}
+      </div>
+
+      {% if space.pending_bookings %}
+        <h5 class="mb-2" style="font-size:.9rem; color:var(--sp-primary);">
+          <i class="bi bi-clock-history me-1"></i>Ожидают подтверждения ({{ space.pending_bookings.count }})
+        </h5>
+        <div class="table-responsive mb-3">
+          <table class="booking-table">
+            <thead>
+              <tr>
+                <th>Арендатор</th>
+                <th>Дата</th>
+                <th>Гости</th>
+                <th>Сумма</th>
+                <th>Статус</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for booking in space.pending_bookings %}
+              <tr>
+                <td>{{ booking.user.get_full_name|default:booking.user.username }}</td>
+                <td>{{ booking.check_in|date:"d.m.Y H:i" }} — {{ booking.check_out|date:"H:i" }}</td>
+                <td>{{ booking.guests }}</td>
+                <td><strong>{{ booking.total_price }} ₽</strong></td>
+                <td><span class="status-badge status-awaiting">Ожидает подтверждения</span></td>
+                <td>
+                  <form method="post" action="{% url 'spaces:confirm_booking' booking.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-confirm" onclick="return confirm('Подтвердить бронирование?')">
+                      <i class="bi bi-check-lg me-1"></i>Подтвердить
+                    </button>
+                  </form>
+                  <form method="post" action="{% url 'spaces:decline_booking' booking.id %}" style="display:inline;" class="ms-1">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-decline" onclick="return confirm('Отклонить бронирование?')">
+                      <i class="bi bi-x-lg me-1"></i>Отклонить
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+
+      {% if space.other_bookings %}
+        <h5 class="mb-2" style="font-size:.9rem; color:var(--sp-muted);">
+          <i class="bi bi-list-check me-1"></i>Другие бронирования ({{ space.other_bookings.count }})
+        </h5>
+        <div class="table-responsive">
+          <table class="booking-table">
+            <thead>
+              <tr>
+                <th>Арендатор</th>
+                <th>Дата</th>
+                <th>Гости</th>
+                <th>Сумма</th>
+                <th>Статус</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for booking in space.other_bookings %}
+              <tr>
+                <td>{{ booking.user.get_full_name|default:booking.user.username }}</td>
+                <td>{{ booking.check_in|date:"d.m.Y H:i" }} — {{ booking.check_out|date:"H:i" }}</td>
+                <td>{{ booking.guests }}</td>
+                <td><strong>{{ booking.total_price }} ₽</strong></td>
+                <td>
+                  {% if booking.status == 'confirmed' %}
+                    <span class="status-badge status-confirmed">Подтверждено</span>
+                  {% elif booking.status == 'cancelled' %}
+                    <span class="status-badge status-cancelled">Отменено</span>
+                  {% elif booking.status == 'pending' %}
+                    <span class="status-badge status-pending">Ожидает оплаты</span>
+                  {% else %}
+                    <span class="status-badge status-awaiting">{{ booking.get_status_display }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+
+      {% if not space.pending_bookings and not space.other_bookings %}
+        <p class="text-muted mb-0" style="font-size:.85rem;">Бронирований пока нет</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <i class="bi bi-building"></i>
+      <h5>У вас пока нет помещений</h5>
+      <p>Добавьте своё первое помещение, чтобы начать сдавать его в аренду</p>
+      <a href="{% url 'spaces:submit' %}" class="btn btn-primary mt-3">Добавить помещение</a>
+    </div>
+  {% endif %}
+
+</div>
+</div>
+{% endblock %}

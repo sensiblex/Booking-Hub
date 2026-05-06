@@ -59,11 +59,17 @@
                                 </a>
                             </li>
 
+                            <li class="nav-item me-2">
+                                <a class="nav-link" href="{% url 'spaces:my_spaces' %}">
+                                    <i class="bi bi-building me-1"></i>Мои помещения
+                                </a>
+                            </li>
+
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle d-flex align-items-center" href="#"
                                    role="button" data-bs-toggle="dropdown">
                                     <i class="bi bi-person-circle me-2"></i>
-                                    {{ user.get_role_display|default:user.username }}
+                                    {{ user.username }}
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" href="/users/profile/">Профиль</a></li>

@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
+from apps.bookings.models import Booking
 from .models import Amenity, Category, Space
 from .forms import UserSpaceSubmissionForm
 from .utils import filter_spaces
@@ -52,3 +53,44 @@ def space_submit(request):
             return redirect('users:profile')
         messages.error(request, 'Проверьте данные формы.')
     return render(request, 'spaces/submit.html', {'form': form})
+
+
+@login_required(login_url='/users/login/')
+def my_spaces(request):
+    spaces = request.user.submitted_spaces.all().select_related('category').prefetch_related(
+        'bookings__user', 'amenities', 'photos'
+    )
+    for space in spaces:
+        space.pending_bookings = space.bookings.filter(
+            status=Booking.STATUS_AWAITING_CONFIRMATION
+        ).select_related('user')
+        space.other_bookings = space.bookings.exclude(
+            status=Booking.STATUS_AWAITING_CONFIRMATION
+        ).select_related('user')
+    return render(request, 'spaces/my_spaces.html', {'spaces': spaces})
+
+
+@login_required(login_url='/users/login/')
+def confirm_booking(request, booking_id):
+    booking = get_object_or_404(Booking, pk=booking_id)
+    if booking.space.submitted_by != request.user:
+        messages.error(request, 'Вы не можете управлять этим бронированием.')
+        return redirect('spaces:my_spaces')
+    if booking.status == Booking.STATUS_AWAITING_CONFIRMATION:
+        booking.status = Booking.STATUS_CONFIRMED
+        booking.save(update_fields=['status', 'updated_at'])
+        messages.success(request, f'Бронирование #{booking.id} подтверждено.')
+    return redirect('spaces:my_spaces')
+
+
+@login_required(login_url='/users/login/')
+def decline_booking(request, booking_id):
+    booking = get_object_or_404(Booking, pk=booking_id)
+    if booking.space.submitted_by != request.user:
+        messages.error(request, 'Вы не можете управлять этим бронированием.')
+        return redirect('spaces:my_spaces')
+    if booking.status == Booking.STATUS_AWAITING_CONFIRMATION:
+        booking.status = Booking.STATUS_CANCELLED
+        booking.save(update_fields=['status', 'updated_at'])
+        messages.success(request, f'Бронирование #{booking.id} отклонено.')
+    return redirect('spaces:my_spaces')

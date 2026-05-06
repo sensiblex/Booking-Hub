@@ -1,11 +1,14 @@
 import base64
+from datetime import timedelta
 
 from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 
+from apps.bookings.models import Booking
 from .models import Amenity, Category, Space, SpacePhoto
 from .utils import filter_spaces
 
@@ -338,3 +341,69 @@ class SeedSpacesCommandTests(TestCase):
                 submitted_by__username='applicant_one',
             ).exists()
         )
+
+
+class LandlordBookingManagementTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.landlord = User.objects.create_user(
+            username='landlord', password='pass', role='client',
+        )
+        self.tenant = User.objects.create_user(
+            username='tenant', password='pass', role='client',
+        )
+        self.space = Space.objects.create(
+            name='Тестовое помещение',
+            address='ул. Тестовая, 1',
+            capacity=10,
+            price_per_hour=1000,
+            submitted_by=self.landlord,
+            moderation_status=Space.MODERATION_APPROVED,
+        )
+        self.booking = Booking.objects.create(
+            user=self.tenant,
+            space=self.space,
+            check_in=timezone.now() + timedelta(days=1),
+            check_out=timezone.now() + timedelta(days=1, hours=2),
+            total_price=2000,
+            status=Booking.STATUS_AWAITING_CONFIRMATION,
+        )
+
+    def test_my_spaces_shows_landlord_bookings(self):
+        self.client.force_login(self.landlord)
+        response = self.client.get(reverse('spaces:my_spaces'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Тестовое помещение')
+        self.assertContains(response, 'Ожидает подтверждения')
+
+    def test_landlord_can_confirm_booking(self):
+        self.client.force_login(self.landlord)
+        response = self.client.post(reverse('spaces:confirm_booking', args=[self.booking.id]))
+        self.assertRedirects(response, reverse('spaces:my_spaces'))
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.status, Booking.STATUS_CONFIRMED)
+
+    def test_landlord_can_decline_booking(self):
+        self.client.force_login(self.landlord)
+        response = self.client.post(reverse('spaces:decline_booking', args=[self.booking.id]))
+        self.assertRedirects(response, reverse('spaces:my_spaces'))
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.status, Booking.STATUS_CANCELLED)
+
+    def test_tenant_cannot_confirm_booking(self):
+        self.client.force_login(self.tenant)
+        response = self.client.post(reverse('spaces:confirm_booking', args=[self.booking.id]))
+        self.assertRedirects(response, reverse('spaces:my_spaces'))
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.status, Booking.STATUS_AWAITING_CONFIRMATION)
+
+    def test_tenant_cannot_decline_booking(self):
+        self.client.force_login(self.tenant)
+        response = self.client.post(reverse('spaces:decline_booking', args=[self.booking.id]))
+        self.assertRedirects(response, reverse('spaces:my_spaces'))
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.status, Booking.STATUS_AWAITING_CONFIRMATION)
+
+    def test_unauthenticated_cannot_access_my_spaces(self):
+        response = self.client.get(reverse('spaces:my_spaces'))
+        self.assertRedirects(response, '/users/login/?next=/spaces/my/')
