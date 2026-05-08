@@ -183,6 +183,53 @@ class SpaceDetailCarouselTests(TestCase):
         self.assertContains(response, 'Первый ракурс')
         self.assertContains(response, 'Второй ракурс')
 
+    def test_detail_page_shows_owner_full_name_or_username_fallback(self):
+        User = get_user_model()
+        owner_with_name = User.objects.create_user(
+            username='owner_with_name',
+            password='pass',
+            first_name='Иван',
+            last_name='Иванов',
+        )
+        owner_without_name = User.objects.create_user(
+            username='owner_username_only',
+            password='pass',
+        )
+
+        space_with_named_owner = Space.objects.create(
+            name='Переговорная с именем владельца',
+            address='ул. Первая, 1',
+            capacity=8,
+            price_per_hour=900,
+            moderation_status=Space.MODERATION_APPROVED,
+            submitted_by=owner_with_name,
+        )
+        space_with_username_owner = Space.objects.create(
+            name='Переговорная с username владельца',
+            address='ул. Вторая, 2',
+            capacity=8,
+            price_per_hour=900,
+            moderation_status=Space.MODERATION_APPROVED,
+            submitted_by=owner_without_name,
+        )
+        legacy_space = Space.objects.create(
+            name='Legacy помещение без владельца',
+            address='ул. Третья, 3',
+            capacity=8,
+            price_per_hour=900,
+            moderation_status=Space.MODERATION_APPROVED,
+            submitted_by=None,
+        )
+
+        response_with_name = self.client.get(reverse('spaces:detail', args=[space_with_named_owner.pk]))
+        self.assertContains(response_with_name, 'Иван Иванов')
+
+        response_with_username = self.client.get(reverse('spaces:detail', args=[space_with_username_owner.pk]))
+        self.assertContains(response_with_username, 'owner_username_only')
+
+        response_legacy = self.client.get(reverse('spaces:detail', args=[legacy_space.pk]))
+        self.assertContains(response_legacy, 'Владелец не указан')
+
 
 class AdminSpacePhotoUploadTests(TestCase):
     def setUp(self):
@@ -359,6 +406,96 @@ class SeedSpacesCommandTests(TestCase):
                 submitted_by__username='applicant_one',
             ).exists()
         )
+
+
+class SpaceOwnerBookingModerationTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.owner = User.objects.create_user(
+            username='space_owner',
+            password='pass',
+        )
+        self.renter = User.objects.create_user(
+            username='renter_user',
+            password='pass',
+        )
+        self.other_user = User.objects.create_user(
+            username='other_user',
+            password='pass',
+        )
+        self.space = Space.objects.create(
+            name='Помещение владельца',
+            address='ул. Владельца, 10',
+            capacity=20,
+            price_per_hour=1500,
+            moderation_status=Space.MODERATION_APPROVED,
+            submitted_by=self.owner,
+        )
+
+    def _create_booking(self, status):
+        return Booking.objects.create(
+            user=self.renter,
+            space=self.space,
+            check_in=timezone.now() + timedelta(days=1),
+            check_out=timezone.now() + timedelta(days=1, hours=2),
+            total_price=3000,
+            status=status,
+        )
+
+    def test_owner_can_confirm_awaiting_confirmation_booking(self):
+        booking = self._create_booking(Booking.STATUS_AWAITING_CONFIRMATION)
+        self.client.force_login(self.owner)
+
+        response = self.client.post(reverse('spaces:confirm_booking', args=[booking.pk]))
+
+        self.assertRedirects(response, reverse('spaces:my_spaces'))
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, Booking.STATUS_CONFIRMED)
+
+    def test_owner_can_decline_awaiting_confirmation_booking(self):
+        booking = self._create_booking(Booking.STATUS_AWAITING_CONFIRMATION)
+        self.client.force_login(self.owner)
+
+        response = self.client.post(reverse('spaces:decline_booking', args=[booking.pk]))
+
+        self.assertRedirects(response, reverse('spaces:my_spaces'))
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, Booking.STATUS_CANCELLED)
+
+    def test_non_owner_cannot_change_foreign_booking_status(self):
+        booking = self._create_booking(Booking.STATUS_AWAITING_CONFIRMATION)
+        self.client.force_login(self.other_user)
+
+        response = self.client.post(reverse('spaces:confirm_booking', args=[booking.pk]))
+
+        self.assertRedirects(response, reverse('spaces:my_spaces'))
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, Booking.STATUS_AWAITING_CONFIRMATION)
+
+    def test_confirm_or_decline_non_awaiting_booking_is_idempotent(self):
+        confirmed_booking = self._create_booking(Booking.STATUS_CONFIRMED)
+        cancelled_booking = self._create_booking(Booking.STATUS_CANCELLED)
+        self.client.force_login(self.owner)
+
+        self.client.post(reverse('spaces:confirm_booking', args=[confirmed_booking.pk]))
+        self.client.post(reverse('spaces:decline_booking', args=[cancelled_booking.pk]))
+
+        confirmed_booking.refresh_from_db()
+        cancelled_booking.refresh_from_db()
+        self.assertEqual(confirmed_booking.status, Booking.STATUS_CONFIRMED)
+        self.assertEqual(cancelled_booking.status, Booking.STATUS_CANCELLED)
+
+    def test_confirm_and_decline_require_post_method(self):
+        booking = self._create_booking(Booking.STATUS_AWAITING_CONFIRMATION)
+        self.client.force_login(self.owner)
+
+        response_confirm = self.client.get(reverse('spaces:confirm_booking', args=[booking.pk]))
+        response_decline = self.client.get(reverse('spaces:decline_booking', args=[booking.pk]))
+
+        self.assertRedirects(response_confirm, reverse('spaces:my_spaces'))
+        self.assertRedirects(response_decline, reverse('spaces:my_spaces'))
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, Booking.STATUS_AWAITING_CONFIRMATION)
 
 
 class LandlordBookingManagementTests(TestCase):

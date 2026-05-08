@@ -195,6 +195,15 @@
       <p class="section-title">Описание</p>
       <p class="detail-desc">{{ space.description }}</p>
       {% endif %}
+
+      <p class="section-title mt-4">Арендодатель</p>
+      <p class="detail-desc mb-0">
+        {% if space.submitted_by %}
+          {{ space.submitted_by.get_full_name|default:space.submitted_by.username }}
+        {% else %}
+          Владелец не указан
+        {% endif %}
+      </p>
     </div>
 
     <!-- Right: Booking card -->

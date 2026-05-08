@@ -24,7 +24,7 @@ def space_list(request):
 def space_detail(request, pk):
     space = get_object_or_404(
         Space.objects.filter(moderation_status=Space.MODERATION_APPROVED)
-        .select_related('category')
+        .select_related('category', 'submitted_by')
         .prefetch_related('amenities', 'photos'),
         pk=pk,
     )
@@ -73,6 +73,9 @@ def my_spaces(request):
 @login_required(login_url='/users/login/')
 def confirm_booking(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id)
+    if request.method != 'POST':
+        messages.error(request, 'Некорректный метод запроса.')
+        return redirect('spaces:my_spaces')
     if booking.space.submitted_by != request.user:
         messages.error(request, 'Вы не можете управлять этим бронированием.')
         return redirect('spaces:my_spaces')
@@ -86,6 +89,9 @@ def confirm_booking(request, booking_id):
 @login_required(login_url='/users/login/')
 def decline_booking(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id)
+    if request.method != 'POST':
+        messages.error(request, 'Некорректный метод запроса.')
+        return redirect('spaces:my_spaces')
     if booking.space.submitted_by != request.user:
         messages.error(request, 'Вы не можете управлять этим бронированием.')
         return redirect('spaces:my_spaces')
