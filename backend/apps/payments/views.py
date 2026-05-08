@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from apps.bookings.models import Booking
+from apps.notifications.services import notify_landlord_new_booking_request
 from .models import Payment
 
 
@@ -34,6 +35,7 @@ def payment_pay(request, booking_id=None):
         if booking.id and isinstance(booking, Booking):
             booking.status = Booking.STATUS_AWAITING_CONFIRMATION
             booking.save(update_fields=['status', 'updated_at'])
+            notify_landlord_new_booking_request(booking, request=request)
         payment_query = f'&payment_id={payment.id}' if payment else ''
         return redirect(reverse('payments:success') + f'?booking_id={booking.id}{payment_query}')
 

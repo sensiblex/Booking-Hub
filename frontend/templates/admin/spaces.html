@@ -35,6 +35,7 @@
           <option value="pending" {% if request.GET.moderation_status == 'pending' %}selected{% endif %}>На модерации</option>
           <option value="approved" {% if request.GET.moderation_status == 'approved' %}selected{% endif %}>Одобрено</option>
           <option value="rejected" {% if request.GET.moderation_status == 'rejected' %}selected{% endif %}>Отклонено</option>
+          <option value="revision_required" {% if request.GET.moderation_status == 'revision_required' %}selected{% endif %}>На доработку</option>
         </select>
       </div>
       <div class="col-md-2 d-flex gap-2">
@@ -90,8 +91,11 @@
               <i class="bi bi-check-lg"></i> Одобрить
             </button>
           </form>
-          <button type="button" class="adm-btn adm-btn-danger reject-btn" data-url="{% url 'admin_space_moderate' s.id %}" data-name="{{ s.name }}">
+          <button type="button" class="adm-btn adm-btn-danger moderate-note-btn" data-action="reject" data-url="{% url 'admin_space_moderate' s.id %}" data-name="{{ s.name }}">
             <i class="bi bi-x-lg"></i> Отклонить
+          </button>
+          <button type="button" class="adm-btn adm-btn-outline moderate-note-btn" data-action="revision_required" data-url="{% url 'admin_space_moderate' s.id %}" data-name="{{ s.name }}">
+            <i class="bi bi-arrow-repeat"></i> На доработку
           </button>
           <form method="post" action="{% url 'admin_space_moderate' s.id %}">
             {% csrf_token %}
@@ -152,6 +156,8 @@
               <span class="adm-badge adm-badge-success">Одобрено</span>
             {% elif s.moderation_status == 'rejected' %}
               <span class="adm-badge adm-badge-danger">Отклонено</span>
+            {% elif s.moderation_status == 'revision_required' %}
+              <span class="adm-badge adm-badge-info">На доработку</span>
             {% else %}
               <span class="adm-badge adm-badge-warning">На модерации</span>
             {% endif %}
@@ -182,8 +188,13 @@
                 </form>
               {% endif %}
               {% if s.moderation_status != 'rejected' %}
-                <button type="button" class="adm-btn adm-btn-sm adm-btn-danger reject-btn" data-url="{% url 'admin_space_moderate' s.id %}" data-name="{{ s.name }}" title="Отклонить">
+                <button type="button" class="adm-btn adm-btn-sm adm-btn-danger moderate-note-btn" data-action="reject" data-url="{% url 'admin_space_moderate' s.id %}" data-name="{{ s.name }}" title="Отклонить">
                   Отклонить
+                </button>
+              {% endif %}
+              {% if s.moderation_status != 'revision_required' %}
+                <button type="button" class="adm-btn adm-btn-sm adm-btn-outline moderate-note-btn" data-action="revision_required" data-url="{% url 'admin_space_moderate' s.id %}" data-name="{{ s.name }}" title="На доработку">
+                  На доработку
                 </button>
               {% endif %}
               {% if s.moderation_status != 'pending' %}
@@ -222,15 +233,15 @@
   <div style="background:#fff;border-radius:14px;padding:1.75rem;width:420px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.2);">
     <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;">
       <i class="bi bi-exclamation-triangle" style="font-size:1.3rem;color:#dc3545;"></i>
-      <h6 style="margin:0;font-size:1rem;font-weight:700;">Отклонить помещение</h6>
+      <h6 id="moderationOverlayTitle" style="margin:0;font-size:1rem;font-weight:700;">Отклонить помещение</h6>
       <button onclick="document.getElementById('rejectOverlay').style.display='none'" style="margin-left:auto;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#999;padding:0 .25rem;">&times;</button>
     </div>
     <p style="font-size:.85rem;color:#6b7280;margin-bottom:.75rem;">Помещение: <strong id="rejectOverlayName"></strong></p>
-    <label style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.35rem;">Причина отклонения</label>
+    <label id="moderationOverlayLabel" style="display:block;font-size:.82rem;font-weight:600;margin-bottom:.35rem;">Причина отклонения</label>
     <textarea id="rejectOverlayNote" rows="3" style="width:100%;border:1.5px solid #e5e7eb;border-radius:8px;padding:.6rem .75rem;font-size:.875rem;resize:vertical;font-family:inherit;" placeholder="Укажите, что нужно исправить..."></textarea>
     <div style="display:flex;gap:.5rem;margin-top:1rem;justify-content:flex-end;">
       <button onclick="document.getElementById('rejectOverlay').style.display='none'" style="padding:.45rem 1.1rem;border:1.5px solid #e5e7eb;border-radius:8px;background:none;font-size:.82rem;font-weight:600;cursor:pointer;">Отмена</button>
-      <button id="rejectOverlaySubmit" style="padding:.45rem 1.1rem;border:none;border-radius:8px;background:#dc3545;color:#fff;font-size:.82rem;font-weight:600;cursor:pointer;"><i class="bi bi-x-lg me-1"></i>Отклонить</button>
+      <button id="rejectOverlaySubmit" style="padding:.45rem 1.1rem;border:none;border-radius:8px;background:#dc3545;color:#fff;font-size:.82rem;font-weight:600;cursor:pointer;"><i class="bi bi-x-lg me-1"></i><span id="moderationOverlaySubmitText">Отклонить</span></button>
     </div>
   </div>
 </div>
@@ -240,13 +251,27 @@
   var overlay = document.getElementById('rejectOverlay');
   var noteEl  = document.getElementById('rejectOverlayNote');
   var nameEl  = document.getElementById('rejectOverlayName');
+  var titleEl = document.getElementById('moderationOverlayTitle');
+  var labelEl = document.getElementById('moderationOverlayLabel');
+  var submitTextEl = document.getElementById('moderationOverlaySubmitText');
   var url     = '';
+  var action  = 'reject';
 
   document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.reject-btn').forEach(function(btn) {
+    document.querySelectorAll('.moderate-note-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         url  = this.dataset.url;
+        action = this.dataset.action || 'reject';
         nameEl.textContent = this.dataset.name;
+        if (action === 'revision_required') {
+          titleEl.textContent = 'Отправить на доработку';
+          labelEl.textContent = 'Что нужно исправить';
+          submitTextEl.textContent = 'На доработку';
+        } else {
+          titleEl.textContent = 'Отклонить помещение';
+          labelEl.textContent = 'Причина отклонения';
+          submitTextEl.textContent = 'Отклонить';
+        }
         noteEl.value = '';
         overlay.style.display = 'flex';
         noteEl.focus();
@@ -264,7 +289,7 @@
       csrf.name = 'csrfmiddlewaretoken';
       csrf.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
       var act = document.createElement('input');
-      act.type = 'hidden'; act.name = 'action'; act.value = 'reject';
+      act.type = 'hidden'; act.name = 'action'; act.value = action;
       var n = document.createElement('input');
       n.type = 'hidden'; n.name = 'moderation_note'; n.value = note;
       form.appendChild(csrf); form.appendChild(act); form.appendChild(n);

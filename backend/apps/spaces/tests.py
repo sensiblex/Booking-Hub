@@ -9,6 +9,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 
 from apps.bookings.models import Booking
+from apps.notifications.models import Notification
 from .models import Amenity, Category, Space, SpacePhoto
 from .utils import filter_spaces
 
@@ -295,6 +296,12 @@ class UserSpaceSubmissionTests(TestCase):
         self.assertEqual(space.moderation_status, Space.MODERATION_PENDING)
         self.assertTrue(space.has_wifi)
         self.assertTrue(space.has_projector)
+        self.assertTrue(
+            Notification.objects.filter(
+                user=self.user,
+                type=Notification.TYPE_SPACE_SUBMITTED,
+            ).exists()
+        )
 
     def test_submit_form_does_not_duplicate_amenity_fields(self):
         self.client.force_login(self.user)
@@ -387,6 +394,50 @@ class SpaceModerationAdminTests(TestCase):
 
         response = self.client.post(reverse('admin_space_moderate', args=[space.pk]), {
             'action': 'reject',
+        })
+
+        self.assertRedirects(response, reverse('admin_spaces'))
+        space.refresh_from_db()
+        self.assertEqual(space.moderation_status, Space.MODERATION_PENDING)
+
+    def test_admin_can_mark_space_as_revision_required_with_reason(self):
+        User = get_user_model()
+        owner = User.objects.create_user(username='owner_for_revision', password='pass')
+        space = Space.objects.create(
+            name='Площадка на доработку',
+            address='ул. Тест, 5',
+            capacity=10,
+            price_per_hour=1000,
+            moderation_status=Space.MODERATION_PENDING,
+            submitted_by=owner,
+        )
+
+        response = self.client.post(reverse('admin_space_moderate', args=[space.pk]), {
+            'action': 'revision_required',
+            'moderation_note': 'Добавьте подробное описание и фото.',
+        })
+
+        self.assertRedirects(response, reverse('admin_spaces'))
+        space.refresh_from_db()
+        self.assertEqual(space.moderation_status, Space.MODERATION_REVISION_REQUIRED)
+        self.assertTrue(
+            Notification.objects.filter(
+                user=owner,
+                type=Notification.TYPE_SPACE_REVISION_REQUIRED,
+            ).exists()
+        )
+
+    def test_admin_revision_required_requires_reason(self):
+        space = Space.objects.create(
+            name='Площадка без комментария',
+            address='ул. Тест, 6',
+            capacity=10,
+            price_per_hour=1000,
+            moderation_status=Space.MODERATION_PENDING,
+        )
+
+        response = self.client.post(reverse('admin_space_moderate', args=[space.pk]), {
+            'action': 'revision_required',
         })
 
         self.assertRedirects(response, reverse('admin_spaces'))
@@ -537,6 +588,12 @@ class LandlordBookingManagementTests(TestCase):
         self.assertRedirects(response, reverse('spaces:my_spaces'))
         self.booking.refresh_from_db()
         self.assertEqual(self.booking.status, Booking.STATUS_CONFIRMED)
+        self.assertTrue(
+            Notification.objects.filter(
+                user=self.tenant,
+                type=Notification.TYPE_BOOKING_APPROVED,
+            ).exists()
+        )
 
     def test_landlord_can_decline_booking(self):
         self.client.force_login(self.landlord)
@@ -544,6 +601,12 @@ class LandlordBookingManagementTests(TestCase):
         self.assertRedirects(response, reverse('spaces:my_spaces'))
         self.booking.refresh_from_db()
         self.assertEqual(self.booking.status, Booking.STATUS_CANCELLED)
+        self.assertTrue(
+            Notification.objects.filter(
+                user=self.tenant,
+                type=Notification.TYPE_BOOKING_DECLINED,
+            ).exists()
+        )
 
     def test_tenant_cannot_confirm_booking(self):
         self.client.force_login(self.tenant)
@@ -596,6 +659,24 @@ class LandlordBookingManagementTests(TestCase):
         self.assertEqual(self.space.moderation_status, Space.MODERATION_PENDING)
         self.assertEqual(self.space.moderation_note, '')
         self.assertEqual(self.space.name, 'Новое название')
+        self.assertTrue(
+            Notification.objects.filter(
+                user=self.landlord,
+                type=Notification.TYPE_SPACE_RESUBMITTED,
+            ).exists()
+        )
+
+    def test_my_spaces_shows_revision_required_note(self):
+        self.space.moderation_status = Space.MODERATION_REVISION_REQUIRED
+        self.space.moderation_note = 'Добавьте фото и описание.'
+        self.space.save()
+        self.client.force_login(self.landlord)
+
+        response = self.client.get(reverse('spaces:my_spaces'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'На доработку')
+        self.assertContains(response, 'Добавьте фото и описание.')
 
     def test_other_user_cannot_edit_space(self):
         self.client.force_login(self.tenant)
