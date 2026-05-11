@@ -64,3 +64,52 @@ body {
 .status-available { color: #10b981; }
 .status-booked { color: #f59e0b; }
 .status-canceled { color: #ef4444; }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+
+    .btn-primary,
+    .btn-success {
+        padding: 0.5rem 1rem;
+        font-size: 0.95rem;
+    }
+
+    .card {
+        margin-bottom: 1rem;
+    }
+
+    .space-card img {
+        height: 180px;
+    }
+
+    .amenity-icon {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .navbar-brand {
+        font-size: 1rem;
+    }
+
+    .navbar-nav .nav-link {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .btn {
+        min-height: 44px;
+        font-size: 0.9rem;
+    }
+
+    .space-card img {
+        height: 160px;
+    }
+}

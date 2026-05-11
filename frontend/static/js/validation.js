@@ -22,6 +22,18 @@
       if (value !== passwordValue) return 'Пароли не совпадают.';
       return '';
     },
+    number(value, min = null, max = null) {
+      if (!value.trim()) return 'Заполните это поле.';
+      const num = parseFloat(value);
+      if (isNaN(num)) return 'Введите числовое значение.';
+      if (min !== null && num < min) return `Значение должно быть не менее ${min}.`;
+      if (max !== null && num > max) return `Значение должно быть не более ${max}.`;
+      return '';
+    },
+    required(value) {
+      if (!value.trim()) return 'Заполните это поле.';
+      return '';
+    },
   };
 
   function getErrorNode(input) {
@@ -71,6 +83,17 @@
     if (input.name === 'password2') {
       return setFieldState(input, rules.passwordConfirm(input.value, password ? password.value : ''));
     }
+    if (input.type === 'number') {
+      const min = input.min ? parseFloat(input.min) : null;
+      const max = input.max ? parseFloat(input.max) : null;
+      return setFieldState(input, rules.number(input.value, min, max));
+    }
+    // Validate date/time fields (flatpickr inputs)
+    if (input.classList.contains('flatpickr-input') && input.required) {
+      if (!input.value.trim()) {
+        return setFieldState(input, 'Выберите дату и время.');
+      }
+    }
 
     if (input.required && !input.value.trim()) {
       return setFieldState(input, 'Заполните это поле.');
@@ -79,7 +102,7 @@
   }
 
   function initForm(form) {
-    const fields = form.querySelectorAll('input[required], input[type="email"], input[type="password"]');
+    const fields = form.querySelectorAll('input[required], input[type="email"], input[type="password"], input[type="number"], textarea[required], input.flatpickr-input[required]');
 
     fields.forEach((field) => {
       field.addEventListener('input', () => validateField(field, form));

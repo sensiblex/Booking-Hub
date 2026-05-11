@@ -22,7 +22,7 @@
 
             <!-- Основная форма -->
             <div class="booking-body">
-                <form method="post" id="booking-form" data-booking-calendar data-price-per-hour="{{ space.price_per_hour }}">
+                <form method="post" id="booking-form" data-client-validation data-booking-calendar data-price-per-hour="{{ space.price_per_hour }}">
                     {% csrf_token %}
                      <input type="hidden" id="booking-availability-url" value="{% url 'bookings:check_availability' %}">
                      <input type="hidden" id="booking-space-id" value="{{ space.id }}">
@@ -82,6 +82,7 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+<script src="{% static 'js/validation.js' %}"></script>
 <script src="{% static 'js/calendar.js' %}"></script>
 <script src="{% static 'js/booking.js' %}"></script>
 {% endblock %}
