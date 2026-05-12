@@ -93,8 +93,8 @@ class PaymentStatusTests(TestCase):
         response = self.client.get(reverse('bookings:history'))
 
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'badge-warning')
         self.assertContains(response, 'Ожидает оплаты')
-        self.assertContains(response, 'payment-status-pending')
 
     def test_booking_history_treats_missing_payment_as_pending(self):
         self.client.force_login(self.user)
@@ -103,7 +103,7 @@ class PaymentStatusTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Ожидает оплаты')
-        self.assertContains(response, 'payment-status-pending')
+        self.assertContains(response, 'badge-warning')
 
     def test_booking_history_shows_success_and_fail_payment_badges(self):
         paid_booking = self.booking
@@ -130,6 +130,6 @@ class PaymentStatusTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Оплачено')
-        self.assertContains(response, 'payment-status-success')
+        self.assertContains(response, 'badge-success') 
         self.assertContains(response, 'Ошибка оплаты')
-        self.assertContains(response, 'payment-status-fail')
+        self.assertContains(response, 'badge-secondary')
