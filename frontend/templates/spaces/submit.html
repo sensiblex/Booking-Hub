@@ -4,12 +4,19 @@
 {% block title %}Добавить помещение — Booking-Hub{% endblock %}
 
 {% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
+* {
+    font-family: 'Inter', sans-serif;
+}
+
 .space-submit-page {
     background: #f8f9fa;
     min-height: 100vh;
     padding: 40px 0;
 }
+
 .space-submit-card {
     background: #ffffff;
     border-radius: 20px;
@@ -18,49 +25,74 @@
     max-width: 680px;
     margin: 0 auto;
 }
+
 .space-submit-header {
-    background: linear-gradient(135deg, #01696f, #0c4e54);
+    background: linear-gradient(135deg, #0d6efd, #0b5ed7);
     color: white;
     padding: 2rem 2.5rem;
 }
+
 .space-submit-header h4 {
     margin: 0 0 8px 0;
     font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
+
 .space-submit-header p {
     margin: 0;
     opacity: 0.85;
     font-size: 0.9rem;
 }
+
 .space-submit-body {
     padding: 2.5rem;
 }
+
 .form-label {
     font-weight: 600;
     color: #374151;
     margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
-.form-control {
+
+.form-label i {
+    color: #0d6efd;
+    font-size: 0.9rem;
+}
+
+.form-control, select.form-control {
     height: 48px;
     border: 2px solid #e5e7eb;
     border-radius: 12px;
     padding: 0 16px;
     font-size: 1rem;
+    width: 100%;
+    transition: all 0.2s ease;
 }
+
 textarea.form-control {
     height: auto;
     min-height: 100px;
+    padding: 12px 16px;
 }
-.form-control:focus {
-    border-color: #01696f;
-    box-shadow: 0 0 0 4px rgba(1, 105, 111, 0.15);
+
+.form-control:focus, select.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
     outline: none;
 }
+
+/* Amenities */
 .amenity-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 0.6rem;
 }
+
 .amenity-option {
     display: flex;
     align-items: center;
@@ -69,47 +101,156 @@ textarea.form-control {
     border: 2px solid #e5e7eb;
     border-radius: 12px;
     cursor: pointer;
-    transition: all 0.18s;
+    transition: all 0.2s ease;
     font-size: 0.9rem;
     color: #6b7280;
 }
+
 .amenity-option:hover {
-    border-color: #9ca3af;
-    color: #374151;
+    border-color: #0d6efd;
+    background: #e8f0fe;
+    color: #0d6efd;
 }
+
 .amenity-option input[type="checkbox"] {
-    accent-color: #01696f;
-    width: 16px;
-    height: 16px;
+    accent-color: #0d6efd;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
 }
-.amenity-option input[type="checkbox"]:checked + span {
-    color: #01696f;
+
+.amenity-option:has(input:checked) {
+    border-color: #0d6efd;
+    background: #e8f0fe;
+    color: #0d6efd;
     font-weight: 600;
 }
+
+/* File input */
+input[type="file"] {
+    padding: 10px !important;
+    height: auto !important;
+}
+
+input[type="file"]::file-selector-button {
+    background: #e8f0fe;
+    border: 1px solid #0d6efd;
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: #0d6efd;
+    font-weight: 500;
+    cursor: pointer;
+    margin-right: 12px;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: #0d6efd;
+    color: white;
+}
+
+/* Error styles */
+.errorlist {
+    color: #dc3545;
+    font-size: 0.75rem;
+    margin-top: 5px;
+    list-style: none;
+    padding-left: 0;
+}
+
+/* Buttons */
 .btn-submit-space {
     height: 54px;
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 700;
     border-radius: 12px;
-    background: #01696f;
+    background: linear-gradient(135deg, #198754, #157347);
     color: #fff;
     border: none;
-    transition: background 0.18s, transform 0.18s;
+    transition: all 0.2s ease;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
+
 .btn-submit-space:hover {
-    background: #0c4e54;
-    transform: translateY(-1px);
+    background: linear-gradient(135deg, #157347, #0e5c3a);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
     color: #fff;
 }
+
 .back-link-space {
     height: 54px;
-    font-size: 1rem;
+    font-size: 0.95rem;
     border-radius: 12px;
-    color: #64748b;
-    font-weight: 500;
+    background: transparent;
+    color: #dc3545;
+    font-weight: 600;
+    border: 2px solid #dc3545;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
 }
+
 .back-link-space:hover {
-    color: #01696f;
+    background: #dc3545;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.d-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.text-muted {
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .space-submit-header {
+        padding: 1.5rem;
+    }
+    
+    .space-submit-body {
+        padding: 1.5rem;
+    }
+    
+    .amenity-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}
+
+@media (max-width: 576px) {
+    .space-submit-page {
+        padding: 20px 0;
+    }
+    
+    .space-submit-header h4 {
+        font-size: 1.2rem;
+    }
+    
+    .amenity-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-label {
+        font-size: 0.85rem;
+    }
+    
+    .btn-submit-space,
+    .back-link-space {
+        height: 48px;
+        font-size: 0.9rem;
+    }
 }
 </style>
 {% endblock %}
@@ -120,7 +261,10 @@ textarea.form-control {
         <div class="space-submit-card">
 
             <div class="space-submit-header">
-                <h4>Добавить помещение</h4>
+                <h4>
+                    <i class="fas fa-plus-circle"></i>
+                    Добавить помещение
+                </h4>
                 <p>Заполните информацию. После отправки помещение попадёт на модерацию.</p>
             </div>
 
@@ -130,51 +274,67 @@ textarea.form-control {
                     {{ form.non_field_errors }}
 
                     <div class="mb-4">
-                        <label class="form-label" for="{{ form.name.id_for_label }}">Название</label>
+                        <label class="form-label" for="{{ form.name.id_for_label }}">
+                            <i class="fas fa-building"></i> Название помещения
+                        </label>
                         {{ form.name }}
                         {{ form.name.errors }}
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label" for="{{ form.address.id_for_label }}">Адрес</label>
+                        <label class="form-label" for="{{ form.address.id_for_label }}">
+                            <i class="fas fa-map-marker-alt"></i> Адрес
+                        </label>
                         {{ form.address }}
                         {{ form.address.errors }}
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label" for="{{ form.category.id_for_label }}">Категория</label>
+                        <label class="form-label" for="{{ form.category.id_for_label }}">
+                            <i class="fas fa-tag"></i> Категория
+                        </label>
                         {{ form.category }}
                         {{ form.category.errors }}
                     </div>
 
                     <div class="row g-4 mb-4">
                         <div class="col-md-6">
-                            <label class="form-label" for="{{ form.capacity.id_for_label }}">Вместимость (чел.)</label>
+                            <label class="form-label" for="{{ form.capacity.id_for_label }}">
+                                <i class="fas fa-users"></i> Вместимость (чел.)
+                            </label>
                             {{ form.capacity }}
                             {{ form.capacity.errors }}
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label" for="{{ form.price_per_hour.id_for_label }}">Цена за час (₽)</label>
+                            <label class="form-label" for="{{ form.price_per_hour.id_for_label }}">
+                                <i class="fas fa-ruble-sign"></i> Цена за час (₽)
+                            </label>
                             {{ form.price_per_hour }}
                             {{ form.price_per_hour.errors }}
                         </div>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label" for="{{ form.description.id_for_label }}">Описание</label>
+                        <label class="form-label" for="{{ form.description.id_for_label }}">
+                            <i class="fas fa-align-left"></i> Описание
+                        </label>
                         {{ form.description }}
                         {{ form.description.errors }}
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label" for="{{ form.image.id_for_label }}">Фото</label>
+                        <label class="form-label" for="{{ form.image.id_for_label }}">
+                            <i class="fas fa-image"></i> Фото помещения
+                        </label>
                         {{ form.image }}
                         <small class="text-muted d-block mt-1">JPG, PNG, WebP — до 5 МБ</small>
                         {{ form.image.errors }}
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label">Удобства</label>
+                        <label class="form-label">
+                            <i class="fas fa-cogs"></i> Удобства
+                        </label>
                         <div class="amenity-grid">
                             {% for checkbox in form.amenities %}
                                 <label class="amenity-option">
@@ -187,11 +347,11 @@ textarea.form-control {
                     </div>
 
                     <div class="d-grid gap-3">
-                        <button type="submit" class="btn btn-submit-space">
-                            Отправить на модерацию
+                        <button type="submit" class="btn-submit-space">
+                            <i class="fas fa-paper-plane"></i> Отправить на модерацию
                         </button>
-                        <a href="{% url 'spaces:my_spaces' %}" class="btn btn-outline-secondary back-link-space text-center">
-                            ← Назад к моим помещениям
+                        <a href="{% url 'spaces:my_spaces' %}" class="back-link-space">
+                            <i class="fas fa-arrow-left"></i> Назад к моим помещениям
                         </a>
                     </div>
                 </form>

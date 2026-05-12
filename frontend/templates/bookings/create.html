@@ -4,60 +4,363 @@
 {% block title %}Бронирование — {{ space.name }}{% endblock %}
 
 {% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link rel="stylesheet" href="{% static 'css/bookings.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+  --sp-primary:       #0d6efd;
+  --sp-primary-light: #e8f0fe;
+  --sp-primary-dark:  #0b5ed7;
+  --sp-success:       #198754;
+  --sp-success-light: #d1e7dd;
+  --sp-text:          #1f2937;
+  --sp-muted:         #6c757d;
+  --sp-border:        #e5e7eb;
+  --sp-bg:            #f8f9fa;
+  --sp-surface:       #ffffff;
+  --sp-radius:        20px;
+  --sp-radius-sm:     12px;
+  --sp-shadow:        0 4px 12px rgba(0,0,0,.05);
+  --sp-shadow-lg:     0 20px 40px rgba(0,0,0,.1);
+  --sp-transition:    300ms cubic-bezier(.2, .9, .4, 1.1);
+}
+
+* {
+  font-family: 'Inter', sans-serif;
+}
+
+.booking-page {
+  background: linear-gradient(135deg, var(--sp-bg) 0%, #e9ecef 100%);
+  min-height: 100vh;
+  padding: 3rem 0;
+}
+
+/* Back link */
+.back-link-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--sp-muted);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: all var(--sp-transition);
+  padding: 0.5rem 0;
+}
+
+.back-link-custom:hover {
+  color: var(--sp-primary);
+  transform: translateX(-4px);
+}
+
+/* Booking Card */
+.booking-card {
+  max-width: 700px;
+  margin: 0 auto;
+  background: var(--sp-surface);
+  border-radius: var(--sp-radius);
+  box-shadow: var(--sp-shadow-lg);
+  overflow: hidden;
+  transition: transform var(--sp-transition), box-shadow var(--sp-transition);
+}
+
+.booking-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 25px 50px rgba(0,0,0,.15);
+}
+
+/* Header */
+.booking-header {
+  background: linear-gradient(135deg, var(--sp-primary) 0%, var(--sp-primary-dark) 100%);
+  padding: 2rem;
+  color: white;
+  text-align: center;
+}
+
+.booking-header h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 0.75rem;
+  opacity: 0.9;
+}
+
+.booking-header h5 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.booking-header small {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.booking-header small i {
+  font-size: 0.75rem;
+}
+
+/* Body */
+.booking-body {
+  padding: 2rem;
+}
+
+/* Form labels */
+.form-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  color: var(--sp-text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-label i {
+  color: var(--sp-primary);
+  font-size: 0.85rem;
+}
+
+/* Form inputs */
+.form-control, .form-select {
+  border: 2px solid var(--sp-border);
+  border-radius: var(--sp-radius-sm);
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  transition: all var(--sp-transition);
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--sp-primary);
+  box-shadow: 0 0 0 4px rgba(13,110,253,.1);
+  outline: none;
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Price Summary */
+.price-summary {
+  background: var(--sp-primary-light);
+  border-radius: var(--sp-radius-sm);
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  border: 1px solid rgba(13,110,253,.2);
+}
+
+.price-summary .fs-1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--sp-primary);
+}
+
+#duration-info {
+  font-size: 0.8rem;
+  color: var(--sp-muted);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgba(13,110,253,.2);
+}
+
+#availability-info {
+  font-size: 0.8rem;
+}
+
+#availability-info.text-success {
+  color: var(--sp-success) !important;
+}
+
+#availability-info.text-danger {
+  color: #dc3545 !important;
+}
+
+/* Buttons */
+.btn-booking {
+  background: linear-gradient(135deg, var(--sp-success) 0%, #157347 100%);
+  color: white;
+  border: none;
+  padding: 1rem;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 700;
+  transition: all var(--sp-transition);
+  width: 100%;
+}
+
+.btn-booking:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3);
+  color: white;
+}
+
+.btn-booking:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.back-link {
+  background: transparent;
+  color: var(--sp-muted);
+  border: 2px solid var(--sp-border);
+  border-radius: 50px;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  text-align: center;
+  display: inline-block;
+  transition: all var(--sp-transition);
+}
+
+.back-link:hover {
+  border-color: var(--sp-primary);
+  color: var(--sp-primary);
+  transform: translateY(-2px);
+}
+
+/* Flatpickr customization */
+.flatpickr-calendar {
+  border-radius: var(--sp-radius-sm) !important;
+  box-shadow: var(--sp-shadow-lg) !important;
+  border: none !important;
+}
+
+.flatpickr-day.selected {
+  background: var(--sp-primary) !important;
+  border-color: var(--sp-primary) !important;
+}
+
+.flatpickr-day:hover {
+  background: var(--sp-primary-light) !important;
+  color: var(--sp-primary) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .booking-page {
+    padding: 1.5rem 0;
+  }
+  
+  .booking-header {
+    padding: 1.5rem;
+  }
+  
+  .booking-header h5 {
+    font-size: 1.2rem;
+  }
+  
+  .booking-body {
+    padding: 1.5rem;
+  }
+  
+  .price-summary .fs-1 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .booking-header h4 {
+    font-size: 0.9rem;
+  }
+  
+  .booking-header h5 {
+    font-size: 1rem;
+  }
+  
+  .booking-body {
+    padding: 1rem;
+  }
+  
+  .price-summary {
+    padding: 1rem;
+  }
+  
+  .btn-booking {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+}
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="booking-page">
     <div class="container">
+        <a href="/spaces/{{ space.pk }}/" class="back-link-custom">
+            <i class="fas fa-arrow-left"></i> Назад к помещению
+        </a>
+        
         <div class="booking-card">
-
             <!-- Заголовок -->
             <div class="booking-header">
-                <h4>Создание бронирования</h4>
-                <h5 class="mb-1">{{ space.name }}</h5>
-                <small>{{ space.address }}</small>
+                <h4>
+                    <i class="fas fa-calendar-plus"></i> Создание бронирования
+                </h4>
+                <h5>{{ space.name }}</h5>
+                <small>
+                    <i class="fas fa-map-marker-alt"></i> {{ space.address }}
+                </small>
             </div>
 
             <!-- Основная форма -->
             <div class="booking-body">
                 <form method="post" id="booking-form" data-client-validation data-booking-calendar data-price-per-hour="{{ space.price_per_hour }}">
                     {% csrf_token %}
-                     <input type="hidden" id="booking-availability-url" value="{% url 'bookings:check_availability' %}">
-                     <input type="hidden" id="booking-space-id" value="{{ space.id }}">
+                    <input type="hidden" id="booking-availability-url" value="{% url 'bookings:check_availability' %}">
+                    <input type="hidden" id="booking-space-id" value="{{ space.id }}">
 
-                     <div class="row g-4">
-                         <div class="col-12 col-md-6">
-                             <label class="form-label">Заезд</label>
-                             <input type="text" id="datetime_start" name="check_in"
-                                    class="form-control flatpickr-input"
-                                    placeholder="Дата и время начала" required>
-                         </div>
+                    <div class="row g-4">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">
+                                <i class="fas fa-calendar-alt"></i> Дата и время начала
+                            </label>
+                            <input type="text" id="datetime_start" name="check_in"
+                                   class="form-control flatpickr-input"
+                                   placeholder="Выберите дату и время" required>
+                        </div>
 
-                         <div class="col-12 col-md-6">
-                             <label class="form-label">Выезд</label>
-                             <input type="text" id="datetime_end" name="check_out"
-                                    class="form-control flatpickr-input"
-                                    placeholder="Дата и время окончания" required>
-                         </div>
-                     </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">
+                                <i class="fas fa-calendar-check"></i> Дата и время окончания
+                            </label>
+                            <input type="text" id="datetime_end" name="check_out"
+                                   class="form-control flatpickr-input"
+                                   placeholder="Выберите дату и время" required>
+                        </div>
+                    </div>
 
-                     <div class="mt-4">
-                         <label class="form-label">Количество гостей</label>
-                         <input type="number" name="guests" class="form-control" value="1" min="1">
-                     </div>
+                    <div class="mt-4">
+                        <label class="form-label">
+                            <i class="fas fa-users"></i> Количество гостей
+                        </label>
+                        <input type="number" name="guests" class="form-control" value="1" min="1" max="{{ space.capacity }}">
+                        <small class="text-muted">Максимум {{ space.capacity }} человек</small>
+                    </div>
 
-                     <div class="mt-4">
-                         <label class="form-label">Особые пожелания</label>
-                         <textarea name="special_requests" class="form-control" rows="4"
-                                   placeholder="Цель бронирования, количество людей, особые пожелания..."></textarea>
-                     </div>
+                    <div class="mt-4">
+                        <label class="form-label">
+                            <i class="fas fa-pen"></i> Особые пожелания
+                        </label>
+                        <textarea name="special_requests" class="form-control" rows="4"
+                                  placeholder="Расскажите о цели бронирования, дополнительных требованиях или особых пожеланиях..."></textarea>
+                    </div>
 
                     <!-- Блок стоимости -->
                     <div class="price-summary">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-semibold fs-5">Итого к оплате:</span>
+                            <span class="fw-semibold fs-5">
+                                <i class="fas fa-ruble-sign"></i> Итого к оплате:
+                            </span>
                             <span id="total-price" class="fs-1">0 ₽</span>
                         </div>
                         <div id="duration-info" class="text-muted mt-1"></div>
@@ -65,12 +368,9 @@
                     </div>
 
                     <div class="d-grid gap-3">
-                        <button type="submit" id="submit-btn" class="btn btn-success btn-booking" disabled>
-                            Подтвердить бронирование
+                        <button type="submit" id="submit-btn" class="btn-booking" disabled>
+                            <i class="fas fa-check-circle"></i> Подтвердить бронирование
                         </button>
-                        <a href="/spaces/{{ space.pk }}/" class="btn btn-outline-secondary btn-lg back-link text-center">
-                            ← Назад к помещению
-                        </a>
                     </div>
                 </form>
             </div>
@@ -82,6 +382,97 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+<script>
+// Инициализация flatpickr для дат
+document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    now.setHours(now.getHours() + 1);
+    now.setMinutes(0);
+    
+    flatpickr("#datetime_start", {
+        locale: "ru",
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        minDate: "today",
+        minTime: "08:00",
+        maxTime: "22:00",
+        time_24hr: true,
+        minuteIncrement: 30,
+        onChange: function() {
+            document.getElementById('datetime_end')._flatpickr.set('minDate', this.selectedDates[0]);
+            checkAvailability();
+        }
+    });
+    
+    flatpickr("#datetime_end", {
+        locale: "ru",
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        minDate: "today",
+        minTime: "09:00",
+        maxTime: "23:00",
+        time_24hr: true,
+        minuteIncrement: 30,
+        onChange: function() {
+            checkAvailability();
+        }
+    });
+    
+    function checkAvailability() {
+        const start = document.getElementById('datetime_start').value;
+        const end = document.getElementById('datetime_end').value;
+        const spaceId = document.getElementById('booking-space-id').value;
+        const totalSpan = document.getElementById('total-price');
+        const durationSpan = document.getElementById('duration-info');
+        const availabilitySpan = document.getElementById('availability-info');
+        const submitBtn = document.getElementById('submit-btn');
+        
+        if (start && end) {
+            fetch('/bookings/check_availability/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    space_id: spaceId,
+                    check_in: start,
+                    check_out: end
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.available) {
+                    availabilitySpan.innerHTML = '<i class="fas fa-check-circle"></i> Помещение свободно в выбранное время';
+                    availabilitySpan.className = 'mt-2 small text-success';
+                    
+                    const hours = data.hours;
+                    const pricePerHour = parseInt({{ space.price_per_hour }});
+                    const total = hours * pricePerHour;
+                    totalSpan.textContent = total + ' ₽';
+                    durationSpan.textContent = 'Длительность: ' + hours + ' ' + getHoursWord(hours);
+                    submitBtn.disabled = false;
+                } else {
+                    availabilitySpan.innerHTML = '<i class="fas fa-times-circle"></i> ' + data.message;
+                    availabilitySpan.className = 'mt-2 small text-danger';
+                    totalSpan.textContent = '0 ₽';
+                    durationSpan.textContent = '';
+                    submitBtn.disabled = true;
+                }
+            });
+        }
+    }
+    
+    function getHoursWord(hours) {
+        const lastDigit = hours % 10;
+        const lastTwo = hours % 100;
+        if (lastTwo >= 11 && lastTwo <= 19) return 'часов';
+        if (lastDigit === 1) return 'час';
+        if (lastDigit >= 2 && lastDigit <= 4) return 'часа';
+        return 'часов';
+    }
+});
+</script>
 <script src="{% static 'js/validation.js' %}"></script>
 <script src="{% static 'js/calendar.js' %}"></script>
 <script src="{% static 'js/booking.js' %}"></script>
