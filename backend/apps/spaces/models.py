@@ -81,10 +81,12 @@ class Space(models.Model):
     MODERATION_PENDING = "pending"
     MODERATION_APPROVED = "approved"
     MODERATION_REJECTED = "rejected"
+    MODERATION_REVISION_REQUIRED = "revision_required"
     MODERATION_STATUS_CHOICES = (
         (MODERATION_PENDING, "На модерации"),
         (MODERATION_APPROVED, "Одобрено"),
         (MODERATION_REJECTED, "Отклонено"),
+        (MODERATION_REVISION_REQUIRED, "На доработку"),
     )
 
     name = models.CharField(max_length=200, verbose_name="Название")

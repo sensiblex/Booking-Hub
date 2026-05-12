@@ -96,6 +96,8 @@
         </div>
       {% if space.moderation_status == 'pending' %}
         <span class="moderation-badge bg-warning text-dark">На модерации</span>
+      {% elif space.moderation_status == 'revision_required' %}
+        <span class="moderation-badge bg-info text-dark">На доработку</span>
       {% elif space.moderation_status == 'rejected' %}
         <span class="moderation-badge bg-danger text-white">Отклонено</span>
       {% else %}
@@ -103,7 +105,17 @@
       {% endif %}
       </div>
 
-      {% if space.moderation_status == 'rejected' and space.moderation_note %}
+      {% if space.moderation_status == 'revision_required' and space.moderation_note %}
+        <div class="alert alert-info d-flex align-items-center" style="font-size:.9rem; padding:.8rem 1rem;">
+          <i class="bi bi-info-circle-fill me-2"></i>
+          <div>
+            <strong>Нужно доработать:</strong> {{ space.moderation_note }}
+          </div>
+        </div>
+        <a href="{% url 'spaces:edit' space.pk %}" class="btn btn-outline-primary btn-sm mb-3">
+          <i class="bi bi-pencil me-1"></i>Исправить и отправить повторно
+        </a>
+      {% elif space.moderation_status == 'rejected' and space.moderation_note %}
         <div class="alert alert-danger d-flex align-items-center" style="font-size:.9rem; padding:.8rem 1rem;">
           <i class="bi bi-exclamation-triangle-fill me-2"></i>
           <div>

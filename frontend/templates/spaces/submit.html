@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Добавить помещение — Booking-Hub{% endblock %}
 
@@ -124,7 +125,7 @@ textarea.form-control {
             </div>
 
             <div class="space-submit-body">
-                <form method="post" enctype="multipart/form-data">
+                <form method="post" enctype="multipart/form-data" data-client-validation>
                     {% csrf_token %}
                     {{ form.non_field_errors }}
 
@@ -198,4 +199,8 @@ textarea.form-control {
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/validation.js' %}"></script>
 {% endblock %}

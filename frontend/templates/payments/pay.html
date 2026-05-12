@@ -46,7 +46,7 @@
                     </div>
 
                     <div class="col-12 col-lg-7">
-                        <form method="post">
+                        <form method="post" data-client-validation>
                             {% csrf_token %}
 
                             <h2 class="h5 fw-bold mb-3">Способ оплаты</h2>
@@ -91,4 +91,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/validation.js' %}"></script>
 {% endblock %}

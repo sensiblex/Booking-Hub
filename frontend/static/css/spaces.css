@@ -38,3 +38,28 @@
     border: none;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
 }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .space-card img {
+        height: 180px;
+    }
+
+    .price {
+        font-size: 1.2rem;
+    }
+
+    .amenity {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .space-card img {
+        height: 160px;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+}

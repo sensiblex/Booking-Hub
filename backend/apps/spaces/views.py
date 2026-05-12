@@ -2,6 +2,11 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from apps.bookings.models import Booking
+from apps.notifications.models import Notification
+from apps.notifications.services import (
+    create_notification,
+    notify_tenant_booking_decision,
+)
 from .models import Amenity, Category, Space
 from .forms import UserSpaceSubmissionForm
 from .utils import filter_spaces
@@ -24,7 +29,7 @@ def space_list(request):
 def space_detail(request, pk):
     space = get_object_or_404(
         Space.objects.filter(moderation_status=Space.MODERATION_APPROVED)
-        .select_related('category')
+        .select_related('category', 'submitted_by')
         .prefetch_related('amenities', 'photos'),
         pk=pk,
     )
@@ -49,6 +54,14 @@ def space_submit(request):
             if 'board' in selected_amenities:
                 space.has_board = True
             space.save(update_fields=['has_wifi', 'has_projector', 'has_board'])
+            create_notification(
+                user=request.user,
+                notification_type=Notification.TYPE_SPACE_SUBMITTED,
+                title='Помещение отправлено на модерацию',
+                message=f'Заявка по помещению "{space.name}" принята в обработку.',
+                url='/spaces/my/',
+                request=request,
+            )
             messages.success(request, 'Помещение отправлено на модерацию.')
             return redirect('users:profile')
         messages.error(request, 'Проверьте данные формы.')
@@ -73,12 +86,16 @@ def my_spaces(request):
 @login_required(login_url='/users/login/')
 def confirm_booking(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id)
+    if request.method != 'POST':
+        messages.error(request, 'Некорректный метод запроса.')
+        return redirect('spaces:my_spaces')
     if booking.space.submitted_by != request.user:
         messages.error(request, 'Вы не можете управлять этим бронированием.')
         return redirect('spaces:my_spaces')
     if booking.status == Booking.STATUS_AWAITING_CONFIRMATION:
         booking.status = Booking.STATUS_CONFIRMED
         booking.save(update_fields=['status', 'updated_at'])
+        notify_tenant_booking_decision(booking, approved=True, request=request)
         messages.success(request, f'Бронирование #{booking.id} подтверждено.')
     return redirect('spaces:my_spaces')
 
@@ -86,12 +103,16 @@ def confirm_booking(request, booking_id):
 @login_required(login_url='/users/login/')
 def decline_booking(request, booking_id):
     booking = get_object_or_404(Booking, pk=booking_id)
+    if request.method != 'POST':
+        messages.error(request, 'Некорректный метод запроса.')
+        return redirect('spaces:my_spaces')
     if booking.space.submitted_by != request.user:
         messages.error(request, 'Вы не можете управлять этим бронированием.')
         return redirect('spaces:my_spaces')
     if booking.status == Booking.STATUS_AWAITING_CONFIRMATION:
         booking.status = Booking.STATUS_CANCELLED
         booking.save(update_fields=['status', 'updated_at'])
+        notify_tenant_booking_decision(booking, approved=False, request=request)
         messages.success(request, f'Бронирование #{booking.id} отклонено.')
     return redirect('spaces:my_spaces')
 
@@ -118,6 +139,14 @@ def space_edit(request, pk):
             if 'board' in selected_amenities:
                 space.has_board = True
             space.save(update_fields=['has_wifi', 'has_projector', 'has_board'])
+            create_notification(
+                user=request.user,
+                notification_type=Notification.TYPE_SPACE_RESUBMITTED,
+                title='Помещение отправлено повторно',
+                message=f'Обновленная заявка "{space.name}" отправлена на модерацию.',
+                url='/spaces/my/',
+                request=request,
+            )
             messages.success(request, 'Помещение отправлено на модерацию.')
             return redirect('spaces:my_spaces')
         messages.error(request, 'Проверьте данные формы.')

@@ -87,3 +87,68 @@
 .back-link:hover {
     color: #01696f;
 }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .booking-page {
+        padding: 20px 0;
+    }
+
+    .booking-card {
+        max-width: 100%;
+        margin: 0 10px;
+    }
+
+    .booking-header {
+        padding: 1.5rem;
+    }
+
+    .booking-body {
+        padding: 1.5rem;
+    }
+
+    .flatpickr-input {
+        height: 48px;
+        font-size: 0.95rem;
+    }
+
+    .price-summary {
+        padding: 1rem;
+        margin: 1.5rem 0;
+    }
+
+    #total-price {
+        font-size: 1.75rem;
+    }
+
+    .btn-booking {
+        height: 50px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .booking-header {
+        padding: 1.25rem;
+    }
+
+    .booking-body {
+        padding: 1.25rem;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+    }
+
+    .flatpickr-input {
+        height: 44px;
+    }
+
+    #total-price {
+        font-size: 1.5rem;
+    }
+
+    .btn-booking {
+        height: 48px;
+    }
+}

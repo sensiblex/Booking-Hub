@@ -63,6 +63,46 @@
                                 </a>
                             </li>
 
+                            <li class="nav-item dropdown me-2">
+                                <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-bell fs-5"></i>
+                                    <span id="nav-notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger {% if not unread_notifications_count %}d-none{% endif %}">
+                                        {{ unread_notifications_count }}
+                                    </span>
+                                </a>
+                                <ul id="nav-notification-list" class="dropdown-menu dropdown-menu-end p-2" style="min-width:340px;">
+                                    <li class="px-2 pb-2 d-flex justify-content-between align-items-center">
+                                        <strong>Уведомления</strong>
+                                        <a href="{% url 'notifications:list' %}" class="small text-decoration-none">Все</a>
+                                    </li>
+                                    {% for n in nav_notifications %}
+                                    <li>
+                                        <div class="dropdown-item-text small mb-1 {% if not n.is_read %}fw-semibold{% endif %}">
+                                            <div class="d-flex justify-content-between gap-2">
+                                                <span>{{ n.title }}</span>
+                                                {% if not n.is_read %}<span class="badge bg-primary">new</span>{% endif %}
+                                            </div>
+                                            <div class="text-muted">{{ n.message|truncatechars:80 }}</div>
+                                            <div class="mt-1 d-flex gap-2 align-items-center">
+                                                {% if n.url %}
+                                                <a href="{{ n.url }}" class="small text-decoration-none">Открыть</a>
+                                                {% endif %}
+                                                {% if not n.is_read %}
+                                                <form method="post" action="{% url 'notifications:mark_read' n.id %}">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="next" value="{{ request.path }}">
+                                                    <button class="btn btn-link p-0 small text-decoration-none" type="submit">Прочитано</button>
+                                                </form>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </li>
+                                    {% empty %}
+                                    <li><span data-empty-notifications="1" class="dropdown-item-text text-muted">Пока нет уведомлений</span></li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle d-flex align-items-center" href="#"
                                    role="button" data-bs-toggle="dropdown">
@@ -108,6 +148,30 @@
             })();
             </script>
         {% endif %}
+        <div id="toast-notifications" style="position:fixed;right:20px;bottom:20px;z-index:10001;display:grid;gap:.5rem;max-width:360px;">
+        {% if toast_notifications %}
+                {% for n in toast_notifications %}
+                <div class="alert alert-primary shadow-sm mb-0" role="alert">
+                    <div class="fw-semibold">{{ n.title }}</div>
+                    <div class="small">{{ n.message }}</div>
+                </div>
+                {% endfor %}
+        {% endif %}
+        </div>
+        {% if toast_notifications %}
+            <script>
+            (function() {
+              setTimeout(function() {
+                var el = document.querySelectorAll('#toast-notifications .alert');
+                el.forEach(function(item) {
+                  item.style.transition = 'opacity .4s';
+                  item.style.opacity = '0';
+                  setTimeout(function() { item.remove(); }, 450);
+                });
+              }, 4000);
+            })();
+            </script>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 
@@ -120,6 +184,124 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
             crossorigin="anonymous"></script>
+    {% if user.is_authenticated %}
+    <script>
+    (function() {
+      var updatesUrl = "{% url 'notifications:updates_api' %}";
+      var notificationsUrl = "{% url 'notifications:list' %}";
+      var csrfToken = "{{ csrf_token }}";
+      var badge = document.getElementById('nav-notification-badge');
+      var listEl = document.getElementById('nav-notification-list');
+      var toastContainer = document.getElementById('toast-notifications');
+      var latestId = 0;
+
+      function extractLatestId() {
+        var forms = listEl ? listEl.querySelectorAll('form[action*="/notifications/"][action*="/read/"]') : [];
+        forms.forEach(function(form) {
+          var match = form.action.match(/\/notifications\/(\d+)\/read\//);
+          if (match) {
+            var id = parseInt(match[1], 10);
+            if (id > latestId) {
+              latestId = id;
+            }
+          }
+        });
+      }
+
+      function updateBadge(count) {
+        if (!badge) return;
+        if (count > 0) {
+          badge.textContent = count;
+          badge.classList.remove('d-none');
+        } else {
+          badge.textContent = '0';
+          badge.classList.add('d-none');
+        }
+      }
+
+      function escapeHtml(text) {
+        return text
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function prependDropdownItem(n) {
+        if (!listEl) return;
+        var empty = listEl.querySelector('[data-empty-notifications]');
+        if (empty) {
+          empty.parentElement.remove();
+        }
+
+        var li = document.createElement('li');
+        var openLink = n.url ? '<a href="' + escapeHtml(n.url) + '" class="small text-decoration-none">Открыть</a>' : '';
+        li.innerHTML = '' +
+          '<div class="dropdown-item-text small mb-1 fw-semibold">' +
+            '<div class="d-flex justify-content-between gap-2">' +
+              '<span>' + escapeHtml(n.title) + '</span>' +
+              '<span class="badge bg-primary">new</span>' +
+            '</div>' +
+            '<div class="text-muted">' + escapeHtml(n.message.length > 80 ? n.message.slice(0, 80) + '...' : n.message) + '</div>' +
+            '<div class="mt-1 d-flex gap-2 align-items-center">' +
+              openLink +
+              '<form method="post" action="/notifications/' + n.id + '/read/">' +
+                '<input type="hidden" name="csrfmiddlewaretoken" value="' + csrfToken + '">' +
+                '<input type="hidden" name="next" value="' + escapeHtml(window.location.pathname) + '">' +
+                '<button class="btn btn-link p-0 small text-decoration-none" type="submit">Прочитано</button>' +
+              '</form>' +
+            '</div>' +
+          '</div>';
+        listEl.appendChild(li);
+        while (listEl.querySelectorAll('li').length > 9) {
+          listEl.removeChild(listEl.lastElementChild);
+        }
+      }
+
+      function showToast(n) {
+        if (!toastContainer) return;
+        var item = document.createElement('div');
+        item.className = 'alert alert-primary shadow-sm mb-0';
+        item.role = 'alert';
+        item.innerHTML = '<div class="fw-semibold">' + escapeHtml(n.title) + '</div><div class="small">' + escapeHtml(n.message) + '</div>';
+        toastContainer.appendChild(item);
+        setTimeout(function() {
+          item.style.transition = 'opacity .4s';
+          item.style.opacity = '0';
+          setTimeout(function() { item.remove(); }, 450);
+        }, 4000);
+      }
+
+      function pollUpdates() {
+        fetch(updatesUrl + '?after_id=' + latestId, {
+          method: 'GET',
+          headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+          .then(function(response) { return response.ok ? response.json() : null; })
+          .then(function(data) {
+            if (!data) return;
+            if (Array.isArray(data.updates) && data.updates.length) {
+              data.updates.forEach(function(n) {
+                prependDropdownItem(n);
+                showToast(n);
+              });
+            }
+            if (typeof data.unread_count === 'number') {
+              updateBadge(data.unread_count);
+            }
+            if (typeof data.latest_id === 'number' && data.latest_id > latestId) {
+              latestId = data.latest_id;
+            }
+          })
+          .catch(function() {});
+      }
+
+      extractLatestId();
+      setInterval(pollUpdates, 7000);
+    })();
+    </script>
+    {% endif %}
 
     {% block extra_js %}{% endblock %}
 </body>

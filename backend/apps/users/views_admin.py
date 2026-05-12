@@ -11,6 +11,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from apps.notifications.services import notify_space_moderation_changed
+
 try:
     from apps.spaces.models import Space, SpacePhoto
     from apps.spaces.forms import SpaceForm
@@ -218,12 +220,24 @@ def admin_space_moderate(request, space_id):
         elif action == 'pending':
             space.moderation_status = Space.MODERATION_PENDING
             message_text = 'Помещение возвращено на модерацию.'
+        elif action == 'revision_required':
+            if not note:
+                messages.error(request, 'Укажите, что нужно доработать.')
+                return redirect('admin_spaces')
+            space.moderation_status = Space.MODERATION_REVISION_REQUIRED
+            message_text = 'Помещение отправлено на доработку.'
         else:
             messages.error(request, 'Некорректное действие модерации.')
             return redirect('admin_spaces')
 
         space.moderation_note = note
         space.save(update_fields=['moderation_status', 'moderation_note'])
+        notify_space_moderation_changed(
+            space=space,
+            moderation_status=space.moderation_status,
+            note=space.moderation_note,
+            request=request,
+        )
         messages.success(request, message_text)
     return redirect('admin_spaces')
 

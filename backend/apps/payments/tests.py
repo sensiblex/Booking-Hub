@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.bookings.models import Booking
+from apps.notifications.models import Notification
 from apps.payments.models import Payment
 from apps.spaces.models import Space
 
@@ -18,11 +19,17 @@ class PaymentStatusTests(TestCase):
             password='pass',
             role='client',
         )
+        self.landlord = User.objects.create_user(
+            username='landlord',
+            password='pass',
+            role='client',
+        )
         self.space = Space.objects.create(
             name='Переговорная Ньютон',
             address='ул. Пушкина, 5',
             capacity=8,
             price_per_hour=900,
+            submitted_by=self.landlord,
         )
         self.booking = Booking.objects.create(
             user=self.user,
@@ -48,6 +55,12 @@ class PaymentStatusTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.booking.refresh_from_db()
         self.assertEqual(self.booking.status, Booking.STATUS_AWAITING_CONFIRMATION)
+        self.assertTrue(
+            Notification.objects.filter(
+                user=self.landlord,
+                type=Notification.TYPE_BOOKING_REQUEST,
+            ).exists()
+        )
 
     def test_success_page_marks_booking_payment_success(self):
         payment = Payment.objects.create_for_booking(self.booking)

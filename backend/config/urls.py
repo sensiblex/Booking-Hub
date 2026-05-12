@@ -37,6 +37,7 @@ urlpatterns = [
     # Apps
     path('users/',  include('apps.users.urls')),
     path('spaces/', include('apps.spaces.urls')),
+    path('notifications/', include('apps.notifications.urls')),
 ]
 
 # СТАЛО
