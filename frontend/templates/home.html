@@ -5,26 +5,29 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
 
 {% block content %}
 
 <!-- Hero Section -->
 <section class="hero">
+    <div class="hero-overlay"></div>
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-7">
-                <h1 class="mb-4">Удобное бронирование<br>помещений для любой задачи</h1>
-                <p class="mb-5">
+                <h1 class="hero-title">Удобное бронирование<br>помещений для любой задачи</h1>
+                <p class="hero-description">
                     Быстро находите и бронируйте коворкинги, переговорные комнаты, 
                     аудитории и другие пространства в несколько кликов.
                 </p>
-                <div class="d-flex gap-3 flex-wrap">
-                    <a href="{% url 'spaces:list' %}" class="btn btn-light btn-lg px-5">
+                <div class="hero-buttons">
+                    <a href="{% url 'spaces:list' %}" class="btn btn-light-custom">
                         Найти помещение
                     </a>
                     {% if not user.is_authenticated %}
-                    <a href="/users/register/" class="btn btn-outline-light btn-lg px-5">
+                    <a href="/users/register/" class="btn btn-outline-custom">
                         Зарегистрироваться
                     </a>
                     {% endif %}
@@ -35,25 +38,32 @@
 </section>
 
 <!-- Как это работает -->
-<section class="py-5 bg-light">
+<section class="how-it-works">
     <div class="container">
         <div class="text-center mb-5">
             <h2 class="section-title">Как это работает</h2>
+            <p class="section-subtitle">Простой процесс в три шага</p>
         </div>
 
         <div class="row text-center g-5">
             <div class="col-md-4">
-                <div class="feature-icon">🔍</div>
+                <div class="step-icon-wrapper">
+                    <i class="fas fa-building"></i>
+                </div>
                 <h4 class="mb-3">1. Выберите помещение</h4>
                 <p class="text-muted">Просмотрите каталог с удобными фильтрами по вместимости, оборудованию и цене</p>
             </div>
             <div class="col-md-4">
-                <div class="feature-icon">📅</div>
+                <div class="step-icon-wrapper">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
                 <h4 class="mb-3">2. Выберите дату и время</h4>
                 <p class="text-muted">Интерактивный календарь покажет только свободные слоты</p>
             </div>
             <div class="col-md-4">
-                <div class="feature-icon">✅</div>
+                <div class="step-icon-wrapper">
+                    <i class="fas fa-check-circle"></i>
+                </div>
                 <h4 class="mb-3">3. Забронируйте</h4>
                 <p class="text-muted">Подтверждение приходит мгновенно на почту</p>
             </div>
@@ -62,37 +72,34 @@
 </section>
 
 <!-- Преимущества -->
-<section class="py-5">
+<section class="features">
     <div class="container">
         <div class="row g-4">
             <div class="col-md-4">
-                <div class="card h-100 p-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Быстрый поиск</h5>
-                        <p class="card-text text-muted">
-                            Фильтры по типу помещения, количеству мест, наличию проектора, доски и Wi-Fi
-                        </p>
+                <div class="card-custom">
+                    <div class="card-icon">
+                        <i class="fas fa-search"></i>
                     </div>
+                    <h5>Быстрый поиск</h5>
+                    <p>Фильтры по типу помещения, количеству мест, наличию проектора, доски и Wi-Fi</p>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card h-100 p-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Онлайн-оплата</h5>
-                        <p class="card-text text-muted">
-                            Безопасная оплата банковской картой прямо на сайте
-                        </p>
+                <div class="card-custom">
+                    <div class="card-icon">
+                        <i class="fas fa-credit-card"></i>
                     </div>
+                    <h5>Онлайн-оплата</h5>
+                    <p>Безопасная оплата банковской картой прямо на сайте</p>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card h-100 p-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Уведомления</h5>
-                        <p class="card-text text-muted">
-                            Напоминания о предстоящей броне и подтверждения по email
-                        </p>
+                <div class="card-custom">
+                    <div class="card-icon">
+                        <i class="fas fa-bell"></i>
                     </div>
+                    <h5>Уведомления</h5>
+                    <p>Напоминания о предстоящей броне и подтверждения по email</p>
                 </div>
             </div>
         </div>
@@ -100,10 +107,10 @@
 </section>
 
 <!-- Призыв к действию -->
-<section class="py-5 bg-primary text-white text-center">
-    <div class="container py-4">
-        <h3 class="mb-4">Начните бронировать уже сегодня</h3>
-        <a href="{% url 'spaces:list' %}" class="btn btn-light btn-lg px-5">
+<section class="cta-section">
+    <div class="container text-center">
+        <h3>Начните бронировать уже сегодня</h3>
+        <a href="{% url 'spaces:list' %}" class="btn btn-cta">
             Перейти в каталог помещений
         </a>
     </div>
