@@ -8,3 +8,4 @@ redis
 decouple
 whitenoise
 Pillow>=10.0.0
+factory_boy
