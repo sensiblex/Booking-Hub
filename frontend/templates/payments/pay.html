@@ -4,7 +4,226 @@
 {% block title %}Оплата бронирования — Booking-Hub{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/payments.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+.payment-page {
+    background: #f8fafc;
+    min-height: 100vh;
+    padding: 40px 0;
+}
+
+.payment-panel {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+}
+
+.payment-panel-header {
+    background: #0d6efd;
+    color: #ffffff;
+    padding: 28px 32px;
+}
+
+.payment-panel-header h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.payment-panel-header p {
+    color: rgba(255, 255, 255, 0.82);
+    margin: 8px 0 0;
+}
+
+.payment-body {
+    padding: 32px;
+}
+
+.payment-summary {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 24px;
+}
+
+.payment-summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.payment-summary-row:last-child {
+    border-bottom: 0;
+}
+
+.payment-summary-label {
+    color: #64748b;
+}
+
+.payment-summary-value {
+    color: #0f172a;
+    font-weight: 700;
+    text-align: right;
+}
+
+.payment-total {
+    color: #0d6efd;
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.payment-method {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    gap: 14px;
+    padding: 16px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.payment-method:hover,
+.payment-method:has(input:checked) {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.12);
+}
+
+.payment-method input {
+    margin-top: 4px;
+}
+
+.payment-method-title {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.payment-method-desc {
+    color: #64748b;
+    font-size: 0.92rem;
+    margin-top: 2px;
+}
+
+/* Alert */
+.alert-info {
+    background: #e8f0fe;
+    border-left: 4px solid #0d6efd;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 24px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.alert-info i {
+    color: #0d6efd;
+    font-size: 1.2rem;
+}
+
+.alert-info {
+    color: #1f2937;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+/* Кнопки */
+.btn-pay {
+    background: #198754;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    flex: 1;
+}
+
+.btn-pay:hover {
+    background: #157347;
+    transform: translateY(-1px);
+    color: white;
+}
+
+/* Кнопка отмены - более заметная */
+.btn-cancel {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    flex: 1;
+    box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
+}
+
+.btn-cancel:hover {
+    background: #bb2d3b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+    color: white;
+}
+
+/* Контейнер кнопок */
+.d-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.d-sm-flex {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 575.98px) {
+    .payment-page {
+        padding: 20px 0;
+    }
+
+    .payment-panel-header,
+    .payment-body {
+        padding: 24px 20px;
+    }
+
+    .payment-summary-row {
+        display: block;
+    }
+
+    .payment-summary-value {
+        margin-top: 4px;
+        text-align: left;
+    }
+    
+    .d-sm-flex {
+        flex-direction: column;
+    }
+    
+    .btn-pay,
+    .btn-cancel {
+        width: 100%;
+    }
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -12,7 +231,7 @@
     <div class="container">
         <div class="payment-panel">
             <div class="payment-panel-header">
-                <h1><i class="bi bi-credit-card me-2"></i>Оплата бронирования</h1>
+                <h1><i class="fas fa-credit-card me-2"></i>Оплата бронирования</h1>
                 <p>Проверьте детали и выберите способ оплаты.</p>
             </div>
 
@@ -56,7 +275,7 @@
                                     <input class="form-check-input" type="radio" name="method" value="card" checked>
                                     <span>
                                         <span class="payment-method-title">
-                                            <i class="bi bi-credit-card me-2"></i>Банковская карта
+                                            <i class="fas fa-credit-card me-2"></i>Банковская карта
                                         </span>
                                         <span class="payment-method-desc d-block">Visa, Mastercard, Мир. Оплата в тестовом режиме.</span>
                                     </span>
@@ -66,23 +285,25 @@
                                     <input class="form-check-input" type="radio" name="method" value="sbp">
                                     <span>
                                         <span class="payment-method-title">
-                                            <i class="bi bi-qr-code me-2"></i>СБП
+                                            <i class="fas fa-qrcode me-2"></i>СБП
                                         </span>
                                         <span class="payment-method-desc d-block">Быстрая оплата через приложение банка.</span>
                                     </span>
                                 </label>
                             </div>
 
-                            <div class="alert alert-info mb-4">
-                                <i class="bi bi-info-circle me-2"></i>
-                                Интеграция с платежным шлюзом подключается на backend-этапе. Эта страница готова для передачи формы в обработчик оплаты.
+                            <div class="alert-info mb-4">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <span>Интеграция с платежным шлюзом подключается на backend-этапе. Эта страница готова для передачи формы в обработчик оплаты.</span>
                             </div>
 
                             <div class="d-grid gap-2 d-sm-flex">
-                                <button type="submit" class="btn btn-success btn-lg flex-sm-fill">
-                                    <i class="bi bi-lock-fill me-2"></i>Перейти к оплате
+                                <button type="submit" class="btn-pay">
+                                    <i class="fas fa-lock me-2"></i>Перейти к оплате
                                 </button>
-                                <a href="/bookings/history/" class="btn btn-outline-secondary btn-lg">Назад</a>
+                                <a href="/bookings/history/" class="btn-cancel">
+                                    <i class="fas fa-times-circle me-2"></i>Отмена
+                                </a>
                             </div>
                         </form>
                     </div>
