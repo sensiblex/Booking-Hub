@@ -513,6 +513,7 @@
   <div class="container-fluid" style="max-width:1280px; padding: 0 1.5rem;">
     {% if spaces %}
       {% for space in spaces %}
+      <a href="{% url 'spaces:detail' space.pk %}" class="space-block-link" style="text-decoration: none; display: block; color: inherit;">
       <div class="space-block">
         <div class="space-header">
           <div class="space-info">
@@ -663,6 +664,7 @@
           </div>
         {% endif %}
       </div>
+      </a>
       {% endfor %}
     {% else %}
       <div class="empty-state">
